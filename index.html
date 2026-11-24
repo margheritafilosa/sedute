@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sedute">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f6f5f2">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="icon.png">
+<title>Sedute</title>
+<style>
+:root{--bg:#f6f5f2;--card:#fff;--ink:#1f2328;--mute:#6b6f76;--line:#e3e1dc;--acc:#2f6f5e;--wa:#1f9d55;--warn:#b54708;--red:#b42318}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);overflow-x:clip}
+header{padding:14px 16px 0;max-width:1100px;margin:auto;padding-top:max(14px,env(safe-area-inset-top))}
+h1{font-size:20px;margin:0 0 10px}
+h2{font-size:16px;margin:0 0 10px}
+nav{display:flex;gap:2px;border-bottom:1px solid var(--line);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{flex:none;border:0;background:none;padding:10px 12px;font:inherit;color:var(--mute);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+nav button.on{color:var(--ink);border-bottom-color:var(--acc);font-weight:600}
+main{max-width:1100px;margin:auto;padding:16px;padding-bottom:max(30px,env(safe-area-inset-bottom))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+label{display:flex;flex-direction:column;font-size:13px;color:var(--mute);gap:4px}
+label.inline{flex-direction:row;align-items:center;gap:6px;color:var(--ink);font-size:14px}
+input,select,textarea{font:inherit;font-size:16px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);max-width:100%}
+input[type=checkbox]{width:20px;height:20px;padding:0}
+textarea{width:100%;min-height:80px;resize:vertical}
+.b{font:inherit;padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;color:var(--ink);text-decoration:none;display:inline-block;min-height:40px}
+.b.p{background:var(--acc);color:#fff;border-color:var(--acc)}
+.b.d{color:var(--red)}
+.b.s{padding:6px 10px;font-size:14px;min-height:34px}
+a.wa{display:inline-block;background:var(--wa);color:#fff;text-decoration:none;padding:10px 14px;border-radius:8px;font-weight:600;white-space:nowrap;text-align:center}
+a.wa.sent{background:#8f9a95}
+a.wa.off{pointer-events:none;opacity:.4}
+.item{border-top:1px solid var(--line);padding:14px 0;display:grid;grid-template-columns:58px minmax(0,1fr) auto;gap:12px;align-items:start}
+.item:first-child{border-top:0}
+.t{font-weight:700;font-size:18px}
+.mute{color:var(--mute);font-size:13px}
+.warn{color:var(--warn);font-size:13px}
+.ok{color:var(--wa);font-weight:600;font-size:13px}
+.err{color:var(--red);font-size:14px}
+.banner{background:#fff4e5;border:1px solid #f5d3a3;color:#7a3e00;padding:10px 14px;border-radius:10px;margin-bottom:14px;font-size:14px}
+.day{font-weight:600;margin:16px 0 4px;text-transform:capitalize}
+.day:first-child{margin-top:0}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse}
+td,th{padding:7px 6px;border-top:1px solid var(--line);text-align:left;vertical-align:middle}
+th{font-size:13px;color:var(--mute);font-weight:500;border-top:0;white-space:nowrap}
+td.n,th.n{text-align:right;white-space:nowrap}
+.hide{display:none!important}
+code{background:#efeee9;padding:1px 5px;border-radius:4px;font-size:13px;overflow-wrap:anywhere}
+.tag{display:inline-block;font-size:12px;padding:1px 7px;border-radius:10px;background:#eef2f0;color:#2f6f5e;margin-left:6px}
+.tag.on{background:#e8eefc;color:#2848a8}
+.tag.g{background:#fdf3d8;color:#8a5a00}
+.st-fatta{background:#e9f6ee}
+.st-disdetta{background:#f1f1f1;color:#888}
+.st-disdetta strong{text-decoration:line-through}
+.st-saltata{background:#fdf0e6}
+.srow{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;padding:10px 8px;border-top:1px solid var(--line);border-radius:6px}
+.srow .ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.sub{display:flex;gap:4px;margin-bottom:12px}
+.sub button{border:1px solid var(--line);background:#fff;padding:7px 12px;border-radius:8px;cursor:pointer;font:inherit;font-size:14px}
+.sub button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.week{display:grid;grid-template-columns:repeat(7,minmax(118px,1fr));gap:6px;overflow-x:auto}
+.wcol{background:#faf9f7;border:1px solid var(--line);border-radius:8px;min-height:180px;padding:6px}
+.wcol.today{border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc)}
+.whead{font-size:13px;font-weight:600;text-transform:capitalize;margin-bottom:6px;color:var(--mute)}
+.wb{border-radius:6px;padding:5px 7px;margin-bottom:5px;font-size:13px;border-left:3px solid #9aa7b4;background:#fff}
+.wb.st-fatta{border-left-color:var(--wa)}
+.wb.st-saltata{border-left-color:#e07b24}
+.wb.st-disdetta{border-left-color:#bbb}
+.wb b{display:block}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.kpi div{background:#faf9f7;border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.kpi b{display:block;font-size:20px;white-space:nowrap}
+.mini{width:84px}
+.confbox{background:#f3f7f5;border:1px solid #d5e4dc;border-radius:10px;padding:12px;margin-top:10px}
+.gbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.maprow{border-top:1px solid var(--line);padding:10px 0;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.maprow:first-of-type{border-top:0}
+@media(max-width:640px){
+  main{padding:12px}
+  .item{grid-template-columns:50px minmax(0,1fr)}
+  .item .act{grid-column:1/-1;flex-direction:row!important;justify-content:space-between;align-items:center!important}
+  .row>label{flex:1 1 140px}
+  .row>label.inline{flex:0 1 auto}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Sedute</h1>
+  <nav id="nav">
+    <button data-tab="prom" class="on">Oggi</button>
+    <button data-tab="agenda">Agenda</button>
+    <button data-tab="paz">Pazienti</button>
+    <button data-tab="pag">Pagamenti</button>
+    <button data-tab="msg">Messaggi</button>
+    <button data-tab="imp">Impostazioni</button>
+  </nav>
+</header>
+<main>
+  <div id="banner" class="banner hide"></div>
+
+  <!-- OGGI -->
+  <section id="tab-prom">
+    <div class="card hide" id="gCard">
+      <div class="gbar">
+        <div><strong>Google Calendar</strong> <span class="mute" id="gLast"></span><div id="gMsg" class="mute"></div></div>
+        <button class="b p" id="gSyncBtn">Aggiorna da Google</button>
+      </div>
+    </div>
+    <div class="card hide" id="mapCard">
+      <h2>Titoli da collegare <span class="mute" id="mapN"></span></h2>
+      <p class="mute" style="margin-top:0">Dimmi a quale paziente corrisponde ogni titolo del calendario. Lo fai una volta sola: poi lo riconosco da solo.</p>
+      <div id="mapList"></div>
+    </div>
+    <div class="card hide" id="confCard">
+      <div class="gbar" style="margin-bottom:4px"><h2 style="margin:0">Da confermare <span class="mute" id="confN"></span></h2>
+        <button class="b s" id="confAll">Segna tutte come già confermate</button></div>
+      <div id="confList"></div>
+    </div>
+    <div class="card hide" id="chiudiCard">
+      <h2>Sedute da segnare <span class="mute" id="chiudiN"></span></h2>
+      <div id="chiudiList"></div>
+    </div>
+    <div class="card">
+      <div class="row">
+        <label>Promemoria per il giorno<input type="date" id="pdate"></label>
+        <button class="b" id="pOggi">Oggi</button>
+        <button class="b" id="pDomani">Domani</button>
+      </div>
+      <div class="mute" id="pCount" style="margin-top:8px"></div>
+    </div>
+    <div class="card" id="pList"></div>
+  </section>
+
+  <!-- AGENDA -->
+  <section id="tab-agenda" class="hide">
+    <div class="card">
+      <h2>Nuova seduta a mano</h2>
+      <p class="mute" style="margin-top:0" id="manualHint"></p>
+      <div class="row">
+        <label>Paziente<select id="sPaz"></select></label>
+        <label>Data<input type="date" id="sData"></label>
+        <label>Ora<input type="time" id="sOra" value="15:00" step="300"></label>
+        <label>Modalità<select id="sMod"><option value="">Come da scheda</option><option value="studio">In studio</option><option value="online">Online</option></select></label>
+        <label>Ripetizione<select id="sRip"><option value="0">Solo questa</option><option value="7">Ogni settimana</option><option value="14">Ogni 2 settimane</option></select></label>
+        <label id="sNWrap" class="hide">Quante sedute<input type="number" id="sN" value="8" min="1" max="60" class="mini"></label>
+        <button class="b p" id="sAdd">Aggiungi</button>
+      </div>
+      <div id="sMsg" style="margin-top:8px"></div>
+    </div>
+    <div class="card">
+      <div class="sub" id="aView"><button data-v="lista" class="on">Lista</button><button data-v="sett">Settimana</button></div>
+      <div id="vSett" class="hide">
+        <div class="row" style="margin-bottom:12px">
+          <button class="b s" id="wPrev">&larr;</button>
+          <button class="b s" id="wNow">Questa settimana</button>
+          <button class="b s" id="wNext">&rarr;</button>
+          <strong id="wLabel"></strong>
+        </div>
+        <div class="week" id="wGrid"></div>
+      </div>
+      <div id="vLista">
+        <div class="row" style="margin-bottom:10px">
+          <label>Dal<input type="date" id="aFrom"></label>
+          <label>Paziente<select id="aPaz"></select></label>
+        </div>
+        <div class="mute" id="aCount"></div>
+        <div id="aList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAZIENTI -->
+  <section id="tab-paz" class="hide">
+    <div class="card">
+      <h2 id="fTitle">Nuovo paziente</h2>
+      <input type="hidden" id="fId">
+      <div class="row">
+        <label>Nome<input id="fNome"></label>
+        <label>Cognome<input id="fCognome"></label>
+        <label>Cellulare<input id="fTel" placeholder="333 1234567" inputmode="tel"></label>
+        <label>Forma<select id="fForma"><option value="lei">Lei</option><option value="tu">Tu</option></select></label>
+        <label>Modalità abituale<select id="fMod"><option value="studio">In studio</option><option value="online">Online</option></select></label>
+        <label>Tariffa €<input id="fTar" type="number" min="0" step="5" class="mini" inputmode="decimal"></label>
+        <label style="flex:1 1 220px">Link videochiamata (se online)<input id="fLink" placeholder="https://meet.google.com/..." inputmode="url"></label>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="b p" id="fSave">Salva paziente</button>
+        <button class="b hide" id="fCancel">Annulla modifica</button>
+        <span class="warn" id="fMsg"></span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="row" style="margin-bottom:8px"><label>Cerca<input id="pzSearch" placeholder="nome o cognome"></label></div>
+      <div class="scroll"><table><thead><tr><th>Paziente</th><th>Cellulare</th><th class="n">Tariffa</th><th class="n">Fatte</th><th class="n">Disd.</th><th class="n">Salt.</th><th class="n">Assenze</th><th>Prossima</th><th></th></tr></thead><tbody id="pzList"></tbody></table></div>
+      <p class="mute" style="margin:10px 0 0">Assenze = (disdette + saltate) sul totale delle sedute già segnate.</p>
+    </div>
+  </section>
+
+  <!-- PAGAMENTI -->
+  <section id="tab-pag" class="hide">
+    <div class="card">
+      <div class="row" style="margin-bottom:14px">
+        <label>Mese<input type="month" id="gMese"></label>
+        <button class="b" id="gCsv">Esporta il mese (CSV per Excel)</button>
+      </div>
+      <div class="kpi" id="gKpi"></div>
+    </div>
+    <div class="card"><h2>Da incassare (tutti i mesi)</h2><div class="scroll" id="gDebiti"></div></div>
+    <div class="card"><h2>Sedute del mese</h2><div class="scroll" id="gMov"></div></div>
+  </section>
+
+  <!-- MESSAGGI -->
+  <section id="tab-msg" class="hide">
+    <div class="card">
+      <h2>Messaggio a più pazienti</h2>
+      <p class="mute" style="margin-top:0">Segnaposto: <code>{nome}</code> <code>{cognome}</code> <code>{firma}</code>. WhatsApp gratis non permette invii di massa: ti preparo un pulsante per ogni paziente.</p>
+      <label>Testo per chi dai del Lei<textarea id="mLei"></textarea></label>
+      <label style="margin-top:10px">Testo per chi dai del tu<textarea id="mTu"></textarea></label>
+      <div class="row" style="margin-top:12px">
+        <label>Destinatari<select id="mDest"><option value="30">Con sedute nei prossimi 30 giorni</option><option value="60">Con sedute nei prossimi 60 giorni</option><option value="all">Tutti i pazienti</option></select></label>
+        <button class="b p" id="mGo">Prepara i messaggi</button>
+      </div>
+    </div>
+    <div class="card hide" id="mCard"><div class="mute" id="mCount" style="margin-bottom:6px"></div><div id="mList"></div></div>
+  </section>
+
+  <!-- IMPOSTAZIONI -->
+  <section id="tab-imp" class="hide">
+    <div class="card">
+      <h2>Google Calendar</h2>
+      <p class="mute" style="margin-top:0">Indirizzo di questa app (serve nella configurazione di Google): <code id="gUrl"></code></p>
+      <div class="row">
+        <label style="flex:1 1 320px">Client ID di Google<input id="iClient" placeholder="....apps.googleusercontent.com" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+        <button class="b p" id="gConnect">Collega Google</button>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <label style="flex:1 1 260px">Calendario da leggere<select id="iCal"><option value="">— prima collega Google —</option></select></label>
+        <button class="b" id="gCalsReload">Ricarica elenco</button>
+      </div>
+      <div id="gSetMsg" class="mute" style="margin-top:8px"></div>
+      <h2 style="margin-top:18px">Titoli collegati</h2>
+      <div id="mapDone" class="mute"></div>
+    </div>
+    <div class="card">
+      <h2>Dati dello studio</h2>
+      <div class="row">
+        <label style="flex:1 1 200px">Firma<input id="iFirma" placeholder="Dott.ssa ..."></label>
+        <label style="flex:2 1 260px">Indirizzo dello studio<input id="iInd" placeholder="Via ..., Città"></label>
+        <label>Prefisso<input id="iPref" class="mini" inputmode="numeric"></label>
+        <label>Durata seduta (min)<input id="iDur" type="number" min="10" step="5" class="mini" inputmode="numeric"></label>
+      </div>
+      <div class="row" style="margin-top:12px"><label class="inline"><input type="checkbox" id="iSalt"> Le sedute saltate senza avviso si pagano</label></div>
+    </div>
+    <div class="card">
+      <h2>Testo del promemoria (giorno prima)</h2>
+      <p class="mute">Segnaposto: <code>{nome}</code> <code>{cognome}</code> <code>{quando}</code> <code>{ora}</code> <code>{luogo}</code> <code>{firma}</code></p>
+      <label>Lei<textarea id="iLei"></textarea></label>
+      <label style="margin-top:10px">Tu<textarea id="iTu"></textarea></label>
+      <h2 style="margin-top:18px">Testo della conferma (nuova seduta)</h2>
+      <p class="mute">Segnaposto: <code>{nome}</code> <code>{cognome}</code> <code>{appuntamento}</code> <code>{luogo}</code> <code>{calendario}</code> (link per salvarla in calendario) <code>{firma}</code></p>
+      <label>Lei<textarea id="iCLei"></textarea></label>
+      <label style="margin-top:10px">Tu<textarea id="iCTu"></textarea></label>
+      <div class="row" style="margin-top:12px">
+        <button class="b p" id="iSave">Salva impostazioni</button>
+        <button class="b" id="iReset">Testi predefiniti</button>
+        <span class="ok" id="iMsg"></span>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Backup</h2>
+      <p class="mute">I dati stanno solo su questo dispositivo, dentro il browser. Se cancelli i dati di Safari o cambi telefono li perdi: fai un backup ogni settimana e salvalo in File o su iCloud Drive. Contiene nomi, numeri e pagamenti dei pazienti: trattalo come materiale riservato.</p>
+      <div class="row">
+        <button class="b p" id="bExp">Salva backup</button>
+        <label class="b" style="flex-direction:row;cursor:pointer;color:var(--ink);font-size:15px;align-items:center">Ripristina da backup<input type="file" id="bImp" accept=".json,application/json" class="hide"></label>
+      </div>
+      <div class="mute" id="bInfo" style="margin-top:8px"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+(function(){
+'use strict';
+const KEY='promemoria_sedute_v1';
+const OLD_LEI='Gentile {nome} {cognome}, le ricordo il nostro appuntamento di {quando} alle ore {ora}{luogo}.\nIn caso di imprevisti la prego di avvisarmi.\nCordiali saluti,\n{firma}';
+const OLD_TU='Ciao {nome}, ti ricordo il nostro appuntamento di {quando} alle {ora}{luogo}.\nSe hai un imprevisto avvisami.\nA presto,\n{firma}';
+const V2_LEI='Gentile {nome} {cognome}, le ricordo il nostro appuntamento di {quando} alle ore {ora}{luogo}.\n{calendario}\nIn caso di imprevisti la prego di avvisarmi.\nCordiali saluti,\n{firma}';
+const V2_TU='Ciao {nome}, ti ricordo il nostro appuntamento di {quando} alle {ora}{luogo}.\n{calendario}\nSe hai un imprevisto avvisami.\nA presto,\n{firma}';
+const TPL_LEI=OLD_LEI, TPL_TU=OLD_TU;
+const CONF_LEI='Gentile {nome} {cognome}, le confermo {appuntamento}{luogo}.\nPer salvare in calendario: {calendario}\nCordiali saluti,\n{firma}';
+const CONF_TU='Ciao {nome}, ti confermo {appuntamento}{luogo}.\nPer salvare in calendario: {calendario}\nA presto,\n{firma}';
+const MSG_LEI='Gentile {nome} {cognome}, la informo che lo studio resterà chiuso dal ... al .... Le sedute riprenderanno regolarmente da ....\nCordiali saluti,\n{firma}';
+const MSG_TU='Ciao {nome}, ti avviso che lo studio resterà chiuso dal ... al .... Ci rivediamo da ....\nA presto,\n{firma}';
+const DEF={settings:{firma:'',indirizzo:'',prefisso:'39',durata:50,saltatePagate:false,tplLei:TPL_LEI,tplTu:TPL_TU,confLei:CONF_LEI,confTu:CONF_TU,msgLei:MSG_LEI,msgTu:MSG_TU,lastBackup:null,gClient:'',gCal:'',gCalName:'',gSince:null},
+  pazienti:[],sedute:[],gmap:{},gser:{},gcache:null};
+const STATI={prevista:'Prevista',fatta:'Fatta',disdetta:'Disdetta',saltata:'Saltata senza avviso'};
+const G_SCOPE='https://www.googleapis.com/auth/calendar.readonly';
+let S, storageOk=true, weekStart=null, aView='lista', gCals=null, gBusy=false;
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const parse=s=>{const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c)};
+const addDays=(s,n)=>{const d=parse(s);d.setDate(d.getDate()+n);return ymd(d)};
+const today=()=>ymd(new Date());
+const nowHM=()=>{const d=new Date();return pad(d.getHours())+':'+pad(d.getMinutes())};
+const fmtDay=s=>parse(s).toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'});
+const fmtShort=s=>parse(s).toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'});
+const eur=n=>(Math.round(n*100)/100).toLocaleString('it-IT',{style:'currency',currency:'EUR'});
+const pz=id=>S.pazienti.find(p=>p.id===id);
+const fullName=p=>p?(p.cognome+' '+p.nome).trim():'(paziente eliminato)';
+const byName=(a,b)=>fullName(a).localeCompare(fullName(b),'it');
+const byTime=(a,b)=>(a.data+a.ora).localeCompare(b.data+b.ora);
+const mondayOf=s=>{const d=parse(s);const w=(d.getDay()+6)%7;d.setDate(d.getDate()-w);return ymd(d)};
+const norm=t=>String(t||'').toLowerCase().replace(/\s+/g,' ').trim();
+const mobile=()=>window.matchMedia&&matchMedia('(pointer:coarse)').matches;
+const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+const lsDel=k=>{try{localStorage.removeItem(k)}catch(e){}};
+
+function load(){
+  try{const r=localStorage.getItem(KEY);S=r?JSON.parse(r):JSON.parse(JSON.stringify(DEF));}
+  catch(e){S=JSON.parse(JSON.stringify(DEF));storageOk=false;}
+  migrate();
+}
+function migrate(){
+  S.settings=Object.assign({},DEF.settings,S.settings||{});
+  if(S.settings.tplLei===V2_LEI) S.settings.tplLei=TPL_LEI;
+  if(S.settings.tplTu===V2_TU) S.settings.tplTu=TPL_TU;
+  S.settings.tplLei=S.settings.tplLei.replace(/\{calendario\}/g,'');S.settings.tplTu=S.settings.tplTu.replace(/\{calendario\}/g,'');
+  delete S.settings.linkCal;
+  S.pazienti=(S.pazienti||[]).map(p=>Object.assign({tariffa:null,link:'',cognome:'',tel:'',forma:'lei',modalita:'studio'},p));
+  S.sedute=(S.sedute||[]).map(s=>Object.assign({stato:'prevista',pagato:false,importo:null,modalita:'',inviato:false,serie:null,step:null,confermata:false,gid:null,spostata:false},s));
+  S.gmap=S.gmap||{};S.gser=S.gser||{};S.gcache=S.gcache||null;
+}
+function save(){
+  try{localStorage.setItem(KEY,JSON.stringify(S));storageOk=true;}catch(e){storageOk=false;}
+  banner();
+}
+function banner(){
+  const b=$('#banner');let t='';
+  if(!storageOk) t='Attenzione: questo browser non permette di salvare i dati. Quello che inserisci andrà perso alla chiusura.';
+  else if(S.pazienti.length){
+    const lb=S.settings.lastBackup;
+    if(!lb) t='Non hai ancora fatto un backup. Vai su Impostazioni → Salva backup.';
+    else if((new Date()-new Date(lb))/864e5>7) t='Ultimo backup più di una settimana fa. Conviene farne uno nuovo (Impostazioni → Salva backup).';
+  }
+  b.textContent=t;b.classList.toggle('hide',!t);
+}
+
+/* ---------- soldi ---------- */
+function importo(s){if(s.importo!=null&&s.importo!=='')return +s.importo;const p=pz(s.pid);return p&&p.tariffa?+p.tariffa:0;}
+function dovuta(s){return s.stato==='fatta'||(s.stato==='saltata'&&S.settings.saltatePagate);}
+
+/* ---------- file: condividi su iPhone, scarica sul computer ---------- */
+function shareFile(name,text,type){
+  try{
+    const f=new File([text],name,{type:type});
+    if(mobile()&&navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f]}).catch(()=>{});return;}
+  }catch(e){}
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:type}));a.download=name;
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),3000);
+}
+
+/* ---------- calendario ---------- */
+function startEnd(s){
+  const[y,m,d]=s.data.split('-').map(Number);const[h,mi]=s.ora.split(':').map(Number);
+  const a=new Date(y,m-1,d,h,mi);return[a,new Date(a.getTime()+(+S.settings.durata||50)*60000)];
+}
+const utc=d=>d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
+function evTitle(){return 'Appuntamento'+(S.settings.firma?' con '+S.settings.firma:'');}
+function evPlace(s,p){return modalita(s,p)==='online'?(p&&p.link?p.link:'Online'):(S.settings.indirizzo||'');}
+function gcalUrl(s,r){
+  const p=pz(s.pid);const[a,b]=startEnd(s);
+  const q=new URLSearchParams({action:'TEMPLATE',text:evTitle(),dates:utc(a)+'/'+utc(b)});
+  if(r)q.set('recur',r.rrule);
+  const loc=evPlace(s,p);if(loc)q.set('location',loc);
+  if(modalita(s,p)==='online'&&p&&p.link)q.set('details','Link: '+p.link);
+  return 'https://calendar.google.com/calendar/render?'+q.toString();
+}
+function icsText(s,r){
+  const p=pz(s.pid);const[a,b]=startEnd(s);
+  const e=t=>String(t).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');
+  const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Sedute//IT','METHOD:PUBLISH','BEGIN:VEVENT',
+    'UID:'+s.id+'@sedute','DTSTAMP:'+utc(new Date()),'DTSTART:'+utc(a),'DTEND:'+utc(b),'SUMMARY:'+e(evTitle())];
+  if(r)L.push(r.rrule);
+  const loc=evPlace(s,p);if(loc)L.push('LOCATION:'+e(loc));
+  if(modalita(s,p)==='online'&&p&&p.link)L.push('DESCRIPTION:'+e('Link: '+p.link));
+  L.push('BEGIN:VALARM','TRIGGER:-PT2H','ACTION:DISPLAY','DESCRIPTION:'+e(evTitle()),'END:VALARM','END:VEVENT','END:VCALENDAR');
+  return L.join('\r\n')+'\r\n';
+}
+
+/* ---------- messaggi ---------- */
+function quando(s){
+  const t=today();
+  if(s===t) return 'oggi, '+fmtDay(s)+',';
+  if(s===addDays(t,1)) return 'domani, '+fmtDay(s)+',';
+  return fmtDay(s);
+}
+function modalita(sd,p){return sd.modalita||(p&&p.modalita)||'studio';}
+function fill(tpl,map){
+  return tpl.replace(/\{(\w+)\}/g,(m,k)=>Object.prototype.hasOwnProperty.call(map,k)?map[k]:m)
+    .replace(/ {2,}/g,' ').replace(/ +([,.;:])/g,'$1').split('\n').map(l=>l.replace(/[ \t]+$/,'')).filter((l,i,arr)=>l!==''||(i>0&&arr[i-1]!=='')).join('\n').trim();
+}
+function luogoText(sd,p){
+  const tu=p.forma==='tu';
+  if(modalita(sd,p)==='online') return ' online'+(p.link?(tu?'. Ecco il link: ':'. Il link per collegarsi è: ')+p.link:'');
+  return S.settings.indirizzo?' presso lo studio in '+S.settings.indirizzo:'';
+}
+function buildMsg(sd){
+  const p=pz(sd.pid);if(!p) return '';
+  return fill(p.forma==='tu'?S.settings.tplTu:S.settings.tplLei,{nome:p.nome,cognome:p.cognome,quando:quando(sd.data),ora:sd.ora,luogo:luogoText(sd,p),firma:S.settings.firma,indirizzo:S.settings.indirizzo,link:p.link||''});
+}
+function stepFromRrule(rr){
+  if(!/FREQ=WEEKLY/.test(rr))return null;const m=rr.match(/INTERVAL=(\d+)/);return 7*(m?+m[1]:1);
+}
+function serieInfo(s){
+  if(!s.serie) return null;
+  if(s.gid){
+    const rr=S.gser[s.serie];if(!rr) return null;
+    return{rrule:rr,step:stepFromRrule(rr),last:null};
+  }
+  if(!s.step) return null;
+  const l=S.sedute.filter(x=>x.serie===s.serie&&x.data>=s.data&&x.stato!=='disdetta').sort(byTime);
+  return l.length>1?{rrule:'RRULE:FREQ=WEEKLY;INTERVAL='+(s.step/7)+';COUNT='+l.length,step:s.step,count:l.length,last:l[l.length-1].data}:null;
+}
+function buildConf(s){
+  const p=pz(s.pid);if(!p) return '';
+  const r=serieInfo(s);let app;
+  if(r){
+    const wd=parse(s.data).toLocaleDateString('it-IT',{weekday:'long'});
+    const freq=r.step===7?'ogni '+wd:r.step===14?(wd==='domenica'?'una domenica sì e una no':'un '+wd+' sì e uno no'):'ricorrenti';
+    app='i nostri appuntamenti '+freq+' alle ore '+s.ora+(r.last?', da '+fmtDay(s.data)+' a '+fmtDay(r.last):', a partire da '+fmtDay(s.data));
+  } else app='il nostro appuntamento di '+fmtDay(s.data)+' alle ore '+s.ora;
+  return fill(p.forma==='tu'?S.settings.confTu:S.settings.confLei,{nome:p.nome,cognome:p.cognome,appuntamento:app,luogo:luogoText(s,p),calendario:gcalUrl(s,r),firma:S.settings.firma});
+}
+function sameGroup(s,x){const r=serieInfo(s);return x.id===s.id||(r&&x.serie===s.serie&&x.data>=s.data);}
+function confBox(s,withSkip){
+  const p=pz(s.pid);const num=p?waNum(p.tel):'';const r=serieInfo(s);
+  return '<div class="confbox" data-id="'+s.id+'">'+
+    '<div style="margin-bottom:6px"><strong>'+esc(fullName(p))+'</strong> <span class="mute">'+esc(fmtShort(s.data)+' · '+s.ora)+(r?' · serie':'')+(s.spostata?' · spostata':'')+'</span>'+
+    (r&&r.count?'<div class="mute">'+r.count+' sedute: il link le salva tutte nel suo calendario</div>':r?'<div class="mute">Serie ricorrente: il link la salva intera nel suo calendario</div>':'')+'</div>'+
+    '<textarea class="cm" rows="5">'+esc(buildConf(s))+'</textarea>'+
+    '<div class="row" style="margin-top:8px;align-items:center"><a class="wa'+(num?'':' off')+'" target="_blank" rel="noopener" href="#">'+(s.confermata?'Inviata · riapri':'Invia conferma su WhatsApp')+'</a>'+
+    '<button class="b s ics2">'+(mobile()?'Condividi invito calendario':'Scarica invito (.ics)')+'</button>'+
+    (withSkip?'<button class="b s skip">Già confermata</button>':'')+
+    (num?'':'<button class="b s goEdit" data-pid="'+esc(s.pid)+'" style="color:var(--warn)">Manca il cellulare: aggiungilo</button>')+'</div></div>';
+}
+function waNum(tel){
+  const raw=(tel||'').trim();let d=raw.replace(/\D/g,'');
+  if(!d) return '';
+  if(raw.startsWith('00')) d=d.slice(2);
+  else if(!raw.startsWith('+') && d.length<=10) d=(S.settings.prefisso||'39').replace(/\D/g,'')+d;
+  return d;
+}
+function waUrl(num,text){return 'https://wa.me/'+num+'?text='+encodeURIComponent(text);}
+
+function editPaz(pid){showTab('paz');const tr=document.querySelector('#pzList tr[data-id="'+pid+'"] .pEdit');if(tr)tr.click();setTimeout(()=>$('#fTel').focus(),50);}
+document.addEventListener('click',e=>{
+  const ge=e.target.closest('.goEdit');if(ge){editPaz(ge.dataset.pid);return;}
+  const box=e.target.closest('.confbox');if(!box)return;
+  const s=S.sedute.find(x=>x.id===box.dataset.id);if(!s)return;const p=pz(s.pid);
+  if(e.target.closest('.ics2')){shareFile('appuntamento-'+s.data+'.ics',icsText(s,serieInfo(s)),'text/calendar');return;}
+  const mark=()=>{S.sedute.forEach(x=>{if(sameGroup(s,x)){x.confermata=true;x.spostata=false;}});save();};
+  if(e.target.closest('.skip')){mark();render();return;}
+  const a=e.target.closest('a.wa');if(!a)return;
+  if(!p||!waNum(p.tel)){e.preventDefault();return;}
+  a.href=waUrl(waNum(p.tel),box.querySelector('textarea.cm').value);
+  mark();
+  setTimeout(()=>{a.classList.add('sent');a.textContent='Inviata · riapri';if(box.closest('#confList'))setTimeout(renderProm,1500);},300);
+});
+
+/* ---------- GOOGLE ---------- */
+const appUrl=()=>location.origin+location.pathname;
+function gTok(){try{const t=JSON.parse(lsGet('g_tok')||'null');return t&&t.exp>Date.now()+60000?t.t:null}catch(e){return null}}
+function gMsg(t,bad){const el=$('#gMsg');if(el){el.textContent=t||'';el.className=bad?'err':'mute';}const s2=$('#gSetMsg');if(s2){s2.textContent=t||'';s2.className=bad?'err':'mute';}}
+function gAuth(){
+  if(location.protocol==='file:'){gMsg('Il collegamento con Google funziona solo quando l\'app è online, non aprendo il file dal computer.',true);return;}
+  const cid=(S.settings.gClient||'').trim();
+  if(!cid){gMsg('Inserisci prima il Client ID in Impostazioni.',true);return;}
+  const st=uid();lsSet('g_state',st);
+  const q=new URLSearchParams({client_id:cid,redirect_uri:appUrl(),response_type:'token',scope:G_SCOPE,include_granted_scopes:'true',state:st});
+  location.href='https://accounts.google.com/o/oauth2/v2/auth?'+q.toString();
+}
+function gHandleRedirect(){
+  const h0=location.hash||'';
+  if(!/access_token=|error=/.test(h0))return false;
+  const h=new URLSearchParams(h0.slice(1));history.replaceState(null,'',appUrl());
+  if(h.get('error')){gMsg('Google non ha dato l\'accesso ('+h.get('error')+').',true);return false;}
+  const st=lsGet('g_state');lsDel('g_state');
+  if(!st||h.get('state')!==st){gMsg('Risposta di Google non valida: riprova.',true);return false;}
+  lsSet('g_tok',JSON.stringify({t:h.get('access_token'),exp:Date.now()+(+h.get('expires_in')||3600)*1000}));
+  return true;
+}
+async function gGet(path,params){
+  const t=gTok();if(!t)throw new Error('AUTH');
+  const r=await fetch('https://www.googleapis.com/calendar/v3/'+path+(params?'?'+new URLSearchParams(params).toString():''),{headers:{Authorization:'Bearer '+t}});
+  if(r.status===401){lsDel('g_tok');throw new Error('AUTH');}
+  if(!r.ok)throw new Error('errore '+r.status);
+  return r.json();
+}
+async function gLoadCalendars(){
+  if(!gTok()){gAuth();return;}
+  gMsg('Carico i tuoi calendari…');
+  try{
+    const d=await gGet('users/me/calendarList',{maxResults:'250'});
+    gCals=(d.items||[]).map(c=>({id:c.id,name:c.summaryOverride||c.summary||c.id})).sort((a,b)=>a.name.localeCompare(b.name,'it'));
+    gMsg('Scegli il calendario delle sedute.');renderImp();
+  }catch(err){gMsg(err.message==='AUTH'?'Accesso scaduto: tocca "Collega Google".':'Non riesco a leggere i calendari ('+err.message+').',true);}
+}
+async function gSync(auto){
+  if(gBusy)return;
+  if(!S.settings.gCal){gMsg('Scegli prima il calendario in Impostazioni.',true);return;}
+  if(!gTok()){if(auto){gMsg('Tocca "Aggiorna da Google" per leggere le novità.');return;}gAuth();return;}
+  gBusy=true;gMsg('Leggo Google Calendar…');
+  try{
+    const from=addDays(today(),-30),to=addDays(today(),120);
+    const p={timeMin:parse(from).toISOString(),timeMax:parse(to).toISOString(),singleEvents:'true',orderBy:'startTime',maxResults:'2500'};
+    let items=[],pt=null,guard=0;
+    do{if(pt)p.pageToken=pt;const d=await gGet('calendars/'+encodeURIComponent(S.settings.gCal)+'/events',p);items=items.concat(d.items||[]);pt=d.nextPageToken;}while(pt&&++guard<20);
+    S.gcache={from:from,to:to,at:new Date().toISOString(),ev:items.filter(e=>e.status!=='cancelled'&&e.start&&e.start.dateTime).map(e=>{
+      const d=new Date(e.start.dateTime);
+      return{id:e.id,t:(e.summary||'(senza titolo)').trim(),data:ymd(d),ora:pad(d.getHours())+':'+pad(d.getMinutes()),c:e.created||'',r:e.recurringEventId||''};})};
+    if(!S.settings.gSince)S.settings.gSince=new Date().toISOString();
+    const res=gProcess();
+    await gFetchSeries();
+    save();gMsg('Aggiornato. '+res);render();
+  }catch(err){
+    if(err.message==='AUTH'){gMsg('Accesso a Google scaduto: tocca "Aggiorna da Google".',true);}
+    else gMsg('Non riesco a leggere Google Calendar ('+err.message+'). Controlla la connessione e riprova.',true);
+  }finally{gBusy=false;}
+}
+async function gFetchSeries(){
+  const t=today();const need=new Set();
+  S.sedute.forEach(s=>{if(s.gid&&s.serie&&!S.gser[s.serie]&&s.data>=t&&!s.confermata)need.add(s.serie);});
+  for(const sid of need){
+    try{const ev=await gGet('calendars/'+encodeURIComponent(S.settings.gCal)+'/events/'+encodeURIComponent(sid.slice(2)));
+      const rr=(ev.recurrence||[]).find(x=>x.indexOf('RRULE:')===0);if(rr)S.gser[sid]=rr;}catch(e){if(e.message==='AUTH')throw e;}
+  }
+}
+function gProcess(){
+  const c=S.gcache;if(!c)return'';
+  const t=today();let nNew=0,nMov=0;const keep=new Set();
+  c.ev.forEach(e=>{
+    const pid=S.gmap[norm(e.t)];if(!pid||pid==='x'||!pz(pid))return;
+    keep.add(e.id);
+    const serie=e.r?'g:'+e.r:null;
+    let s=S.sedute.find(x=>x.gid===e.id);
+    if(s){
+      s.pid=pid;s.serie=serie;
+      if(s.data!==e.data||s.ora!==e.ora){s.data=e.data;s.ora=e.ora;s.inviato=false;if(e.data>=t&&s.stato==='prevista'){s.confermata=false;s.spostata=true;}nMov++;}
+    } else {
+      S.sedute.push({id:uid(),gid:e.id,pid:pid,data:e.data,ora:e.ora,modalita:'',inviato:false,serie:serie,step:null,stato:'prevista',pagato:false,importo:null,
+        confermata:e.data<t||(!!e.c&&e.c<S.settings.gSince),spostata:false});
+      nNew++;
+    }
+  });
+  const before=S.sedute.length;
+  S.sedute=S.sedute.filter(s=>!(s.gid&&!keep.has(s.gid)&&s.data>=t&&s.data<=c.to&&s.stato==='prevista'));
+  const nDel=before-S.sedute.length;
+  return [nNew?nNew+' nuove':'',nMov?nMov+' spostate':'',nDel?nDel+' tolte (cancellate su Google)':''].filter(Boolean).join(', ')||'Nessuna novità.';
+}
+function unmapped(){
+  const c=S.gcache;if(!c)return[];const t=today();const g={};
+  c.ev.forEach(e=>{const k=norm(e.t);if(S.gmap[k]&&(S.gmap[k]==='x'||pz(S.gmap[k])))return;
+    const o=g[k]||(g[k]={k:k,t:e.t,n:0,next:null,last:null});o.n++;
+    if(e.data>=t){if(!o.next||(e.data+e.ora)<o.next)o.next=e.data+' '+e.ora;}else{if(!o.last||(e.data+e.ora)>o.last)o.last=e.data+' '+e.ora;}});
+  return Object.values(g).sort((a,b)=>(a.next||'9'+a.last).localeCompare(b.next||'9'+b.last));
+}
+$('#gSyncBtn').onclick=()=>gSync(false);
+$('#gConnect').onclick=()=>{S.settings.gClient=$('#iClient').value.trim();save();gAuth();};
+$('#gCalsReload').onclick=gLoadCalendars;
+$('#iCal').addEventListener('change',()=>{
+  const v=$('#iCal').value;if(!v)return;
+  const c=(gCals||[]).find(x=>x.id===v);S.settings.gCal=v;S.settings.gCalName=c?c.name:v;save();gMsg('Calendario scelto: '+S.settings.gCalName+'. Vado a leggerlo…');
+  document.querySelector('#nav button[data-tab=prom]').click();gSync(false);
+});
+
+/* ---------- OGGI ---------- */
+function renderGoogle(){
+  const on=!!S.settings.gClient;
+  $('#gCard').classList.toggle('hide',!on);
+  if(on)$('#gLast').textContent=S.gcache?'· ultimo aggiornamento '+new Date(S.gcache.at).toLocaleString('it-IT',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):(S.settings.gCal?'· mai aggiornato':'· scegli il calendario in Impostazioni');
+  const um=unmapped();
+  $('#mapCard').classList.toggle('hide',!um.length);$('#mapN').textContent='('+um.length+')';
+  const opts='<option value="">— a chi corrisponde? —</option>'+[...S.pazienti].sort(byName).map(p=>'<option value="'+p.id+'">'+esc(fullName(p))+'</option>').join('')+
+    '<option value="+">+ Nuovo paziente con questo nome</option><option value="x">Non è una seduta: ignora</option>';
+  $('#mapList').innerHTML=um.map(o=>'<div class="maprow" data-k="'+esc(o.k)+'"><div><strong>'+esc(o.t)+'</strong><div class="mute">'+o.n+' event'+(o.n===1?'o':'i')+
+    (o.next?' · prossimo '+esc(fmtShort(o.next.slice(0,10))+' '+o.next.slice(11)):' · ultimo '+esc(fmtShort(o.last.slice(0,10))))+'</div></div>'+
+    '<div class="row" style="align-items:center"><select class="mapSel">'+opts+'</select><button class="b s p mapOk">OK</button></div></div>').join('');
+}
+$('#mapList').addEventListener('click',e=>{
+  if(!e.target.classList.contains('mapOk'))return;
+  const row=e.target.closest('.maprow');const k=row.dataset.k;let v=row.querySelector('.mapSel').value;if(!v)return;
+  const ev=(S.gcache.ev||[]).find(x=>norm(x.t)===k);
+  if(v==='+'){const parts=(ev?ev.t:k).trim().split(/\s+/);const np={id:uid(),nome:parts[0],cognome:parts.slice(1).join(' '),tel:'',forma:'lei',modalita:'studio',link:'',tariffa:null};S.pazienti.push(np);v=np.id;}
+  S.gmap[k]=v;gProcess();save();gMsg('');
+  if(v!=='x'&&!gTok()){renderProm();return;}
+  gFetchSeries().then(()=>{save();renderProm();}).catch(()=>renderProm());
+});
+function renderConf(){
+  const t=today();
+  const all=S.sedute.filter(s=>s.data>=t&&s.stato==='prevista'&&!s.confermata&&pz(s.pid)).sort(byTime);
+  const seen=new Set();const heads=[];
+  all.forEach(s=>{const r=serieInfo(s);const k=r?s.serie:s.id;if(seen.has(k))return;seen.add(k);heads.push(s);});
+  $('#confCard').classList.toggle('hide',!heads.length);$('#confN').textContent='('+heads.length+')';
+  $('#confList').innerHTML=heads.map(s=>confBox(s,true)).join('');
+}
+$('#confAll').onclick=()=>{
+  if(!confirm('Segnare tutte le sedute in elenco come già confermate ai pazienti?'))return;
+  const t=today();S.sedute.forEach(s=>{if(s.data>=t&&!s.confermata){s.confermata=true;s.spostata=false;}});save();renderProm();
+};
+function renderChiudi(){
+  const t=today(),h=nowHM();
+  const list=S.sedute.filter(s=>s.stato==='prevista'&&(s.data<t||(s.data===t&&s.ora<=h))).sort(byTime);
+  $('#chiudiCard').classList.toggle('hide',!list.length);$('#chiudiN').textContent='('+list.length+')';
+  $('#chiudiList').innerHTML=list.map(s=>'<div class="srow" data-id="'+s.id+'"><div><strong>'+esc(fullName(pz(s.pid)))+'</strong> <span class="mute" style="text-transform:capitalize">'+esc(fmtShort(s.data))+' · '+esc(s.ora)+'</span></div>'+
+    '<div class="ctl"><button class="b s setSt" data-st="fatta">Fatta</button><button class="b s setSt" data-st="disdetta">Disdetta</button><button class="b s setSt" data-st="saltata">Saltata</button></div></div>').join('');
+}
+$('#chiudiList').addEventListener('click',e=>{
+  const b=e.target.closest('.setSt');if(!b)return;
+  const s=S.sedute.find(x=>x.id===b.closest('.srow').dataset.id);if(!s)return;
+  s.stato=b.dataset.st;save();renderProm();
+});
+function renderProm(){
+  renderGoogle();renderConf();renderChiudi();
+  const d=$('#pdate').value;
+  const all=S.sedute.filter(s=>s.data===d).sort(byTime);
+  const list=all.filter(s=>s.stato!=='disdetta');
+  const sent=list.filter(s=>s.inviato).length;const dis=all.length-list.length;
+  $('#pCount').textContent=(list.length?(list.length+(list.length===1?' seduta':' sedute')+' · '+sent+' promemoria inviati'):'')+(dis?' · '+dis+' disdett'+(dis===1?'a':'e'):'');
+  if(!list.length){$('#pList').innerHTML='<p class="mute" style="margin:0">Nessuna seduta '+esc(quando(d).replace(/,$/,''))+'.</p>';return;}
+  $('#pList').innerHTML=list.map(s=>{
+    const p=pz(s.pid);const num=p?waNum(p.tel):'';const txt=buildMsg(s);const mod=modalita(s,p);
+    return '<div class="item" data-id="'+s.id+'">'+
+      '<div class="t">'+esc(s.ora)+'</div>'+
+      '<div><div><strong>'+esc(fullName(p))+'</strong><span class="tag'+(mod==='online'?' on':'')+'">'+(mod==='online'?'online':'studio')+'</span></div>'+
+      (num?'':'<div class="warn">Manca il cellulare nella scheda</div>')+
+      '<textarea class="pm" rows="5" style="margin-top:6px">'+esc(txt)+'</textarea></div>'+
+      '<div class="act" style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">'+
+      '<a class="wa'+(s.inviato?' sent':'')+(num?'':' off')+'" target="_blank" rel="noopener" href="'+(num?esc(waUrl(num,txt)):'#')+'">'+(s.inviato?'Inviato · riapri':'Apri WhatsApp')+'</a>'+
+      '<label class="inline mute"><input type="checkbox" class="inv"'+(s.inviato?' checked':'')+'> inviato</label></div></div>';
+  }).join('');
+}
+$('#pList').addEventListener('click',e=>{
+  const a=e.target.closest('a.wa');if(!a)return;
+  const it=a.closest('.item');const s=S.sedute.find(x=>x.id===it.dataset.id);const p=s&&pz(s.pid);
+  if(!s||!p){e.preventDefault();return;}
+  a.href=waUrl(waNum(p.tel),it.querySelector('textarea.pm').value);
+  s.inviato=true;save();setTimeout(renderProm,400);
+});
+$('#pList').addEventListener('change',e=>{
+  if(!e.target.classList.contains('inv'))return;
+  const s=S.sedute.find(x=>x.id===e.target.closest('.item').dataset.id);
+  if(s){s.inviato=e.target.checked;save();renderProm();}
+});
+$('#pdate').addEventListener('change',renderProm);
+$('#pOggi').onclick=()=>{$('#pdate').value=today();renderProm();};
+$('#pDomani').onclick=()=>{$('#pdate').value=addDays(today(),1);renderProm();};
+
+/* ---------- AGENDA ---------- */
+function pazOptions(sel,withAll){
+  const sorted=[...S.pazienti].sort(byName);const cur=sel.value;
+  sel.innerHTML=(withAll?'<option value="">Tutti</option>':(sorted.length?'':'<option value="">Prima aggiungi un paziente</option>'))+
+    sorted.map(p=>'<option value="'+p.id+'">'+esc(fullName(p))+'</option>').join('');
+  if([...sel.options].some(o=>o.value===cur)) sel.value=cur;
+}
+$('#sRip').addEventListener('change',()=>$('#sNWrap').classList.toggle('hide',$('#sRip').value==='0'));
+$('#sAdd').onclick=()=>{
+  const pid=$('#sPaz').value,data=$('#sData').value,ora=$('#sOra').value;const m=$('#sMsg');
+  if(!pid||!data||!ora){m.className='warn';m.textContent='Servono paziente, data e ora.';return;}
+  const step=+$('#sRip').value;const n=step?Math.max(1,Math.min(60,+$('#sN').value||1)):1;
+  const serie=step?uid():null;const clash=[];let first=null;
+  for(let i=0;i<n;i++){
+    const d=addDays(data,i*step);
+    const c=S.sedute.find(x=>x.data===d&&x.ora===ora&&x.stato!=='disdetta');
+    if(c) clash.push(fmtDay(d)+' ('+fullName(pz(c.pid))+')');
+    const ns={id:uid(),pid:pid,data:d,ora:ora,modalita:$('#sMod').value,inviato:false,serie:serie,step:step||null,stato:'prevista',pagato:false,importo:null,confermata:false,gid:null,spostata:false};
+    S.sedute.push(ns);if(!first)first=ns;
+  }
+  save();
+  m.className=clash.length?'warn':'ok';
+  m.innerHTML=(n===1?'Seduta aggiunta.':n+' sedute aggiunte.')+(clash.length?'<br>Attenzione, alla stessa ora c\'è già qualcuno: '+esc(clash.join('; ')):'')+confBox(first,false);
+  weekStart=mondayOf(data);renderAgenda();
+};
+$('#aView').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-v]');if(!b)return;aView=b.dataset.v;
+  document.querySelectorAll('#aView button').forEach(x=>x.classList.toggle('on',x===b));renderAgenda();
+});
+function renderAgenda(){
+  pazOptions($('#sPaz'),false);pazOptions($('#aPaz'),true);
+  $('#manualHint').textContent=S.settings.gCal?'Le sedute del calendario "'+S.settings.gCalName+'" arrivano da sole: usa questo solo per quelle che non metti su Google.':'';
+  $('#vSett').classList.toggle('hide',aView!=='sett');$('#vLista').classList.toggle('hide',aView!=='lista');
+  if(aView==='sett') renderWeek(); else renderList();
+}
+function renderWeek(){
+  if(!weekStart) weekStart=mondayOf(today());
+  const end=addDays(weekStart,6),t=today();
+  $('#wLabel').textContent=parse(weekStart).toLocaleDateString('it-IT',{day:'numeric',month:'short'})+' – '+parse(end).toLocaleDateString('it-IT',{day:'numeric',month:'short'});
+  let html='';
+  for(let i=0;i<7;i++){
+    const d=addDays(weekStart,i);const list=S.sedute.filter(s=>s.data===d).sort(byTime);
+    html+='<div class="wcol'+(d===t?' today':'')+'"><div class="whead">'+esc(fmtShort(d))+'</div>'+
+      list.map(s=>{const p=pz(s.pid);const mod=modalita(s,p);
+        return '<div class="wb st-'+s.stato+'"><b>'+esc(s.ora)+'</b>'+esc(fullName(p))+(mod==='online'?' <span class="mute">· online</span>':'')+
+        (s.stato!=='prevista'?'<div class="mute">'+esc(STATI[s.stato])+'</div>':'')+'</div>';}).join('')+'</div>';
+  }
+  $('#wGrid').innerHTML=html;
+}
+$('#wPrev').onclick=()=>{weekStart=addDays(weekStart,-7);renderWeek();};
+$('#wNext').onclick=()=>{weekStart=addDays(weekStart,7);renderWeek();};
+$('#wNow').onclick=()=>{weekStart=mondayOf(today());renderWeek();};
+function renderList(){
+  const from=$('#aFrom').value||today(),fp=$('#aPaz').value;
+  const list=S.sedute.filter(s=>s.data>=from&&(!fp||s.pid===fp)).sort(byTime);
+  $('#aCount').textContent=list.length+(list.length===1?' seduta':' sedute');
+  if(!list.length){$('#aList').innerHTML='<p class="mute" style="margin:8px 0 0">Nessuna seduta da questa data.</p>';return;}
+  let html='',last='';
+  list.forEach(s=>{
+    if(s.data!==last){html+='<div class="day">'+esc(fmtDay(s.data))+'</div>';last=s.data;}
+    const p=pz(s.pid);const mod=modalita(s,p);
+    html+='<div class="srow st-'+s.stato+'" data-id="'+s.id+'"><div><strong>'+esc(s.ora)+'  '+esc(fullName(p))+'</strong>'+
+      (s.gid?'<span class="tag g">Google</span>':'')+'<span class="tag'+(mod==='online'?' on':'')+'">'+mod+'</span>'+
+      '<div class="mute">'+(s.confermata?'confermata':'da confermare')+(s.inviato?' · promemoria inviato':'')+'</div></div>'+
+      '<div class="ctl"><select class="eSt">'+Object.keys(STATI).map(k=>'<option value="'+k+'"'+(s.stato===k?' selected':'')+'>'+STATI[k]+'</option>').join('')+'</select>'+
+      '<input type="number" class="eImp mini" min="0" step="5" inputmode="decimal" value="'+esc(importo(s)||'')+'" title="Importo €" placeholder="€">'+
+      '<label class="inline mute"><input type="checkbox" class="ePag"'+(s.pagato?' checked':'')+'> pagata</label>'+
+      (s.gid?'':'<input type="date" class="eData" value="'+esc(s.data)+'"><input type="time" class="eOra" value="'+esc(s.ora)+'" step="300">')+
+      '<button class="b s eConf">Conferma</button>'+
+      (s.gid?'':'<button class="b s d eDel">Elimina</button>'+(s.serie?'<button class="b s d eDelS">Elimina da qui in poi</button>':''))+'</div></div>';
+  });
+  $('#aList').innerHTML=html;
+}
+$('#aList').addEventListener('change',e=>{
+  const row=e.target.closest('.srow');if(!row)return;const s=S.sedute.find(x=>x.id===row.dataset.id);if(!s)return;
+  const c=e.target.classList;
+  if(c.contains('eOra')&&e.target.value){s.ora=e.target.value;s.inviato=false;s.confermata=false;s.serie=null;s.step=null;}
+  else if(c.contains('eData')&&e.target.value){s.data=e.target.value;s.inviato=false;s.confermata=false;s.serie=null;s.step=null;}
+  else if(c.contains('eSt')) s.stato=e.target.value;
+  else if(c.contains('eImp')) s.importo=e.target.value===''?null:+e.target.value;
+  else if(c.contains('ePag')) s.pagato=e.target.checked;
+  else return;
+  save();renderList();
+});
+$('#aList').addEventListener('click',e=>{
+  const row=e.target.closest('.srow');if(!row)return;const s=S.sedute.find(x=>x.id===row.dataset.id);if(!s)return;
+  if(e.target.classList.contains('eConf')){
+    const nx=row.nextElementSibling;if(nx&&nx.classList.contains('confwrap')){nx.remove();return;}
+    row.insertAdjacentHTML('afterend','<div class="confwrap">'+confBox(s,false)+'</div>');return;
+  }
+  if(e.target.classList.contains('eDel')){
+    if(!confirm('Eliminare la seduta di '+fmtDay(s.data)+' alle '+s.ora+'? Se il paziente ha disdetto, meglio segnarla come "Disdetta".'))return;
+    S.sedute=S.sedute.filter(x=>x.id!==s.id);
+  } else if(e.target.classList.contains('eDelS')){
+    const n=S.sedute.filter(x=>x.serie===s.serie&&x.data>=s.data).length;
+    if(!confirm('Eliminare '+n+' sedute di questa serie, da '+fmtDay(s.data)+' in poi?'))return;
+    S.sedute=S.sedute.filter(x=>!(x.serie===s.serie&&x.data>=s.data));
+  } else return;
+  save();renderList();
+});
+$('#aFrom').addEventListener('change',renderList);
+$('#aPaz').addEventListener('change',renderList);
+
+/* ---------- PAZIENTI ---------- */
+function clearForm(){
+  ['fId','fNome','fCognome','fTel','fLink','fTar'].forEach(i=>$('#'+i).value='');
+  $('#fForma').value='lei';$('#fMod').value='studio';
+  $('#fTitle').textContent='Nuovo paziente';$('#fCancel').classList.add('hide');$('#fMsg').textContent='';
+}
+$('#fSave').onclick=()=>{
+  const nome=$('#fNome').value.trim(),cognome=$('#fCognome').value.trim();
+  if(!nome){$('#fMsg').textContent='Serve almeno il nome.';return;}
+  const tar=$('#fTar').value;
+  const data={nome:nome,cognome:cognome,tel:$('#fTel').value.trim(),forma:$('#fForma').value,modalita:$('#fMod').value,link:$('#fLink').value.trim(),tariffa:tar===''?null:+tar};
+  const id=$('#fId').value;
+  if(id) Object.assign(pz(id),data); else S.pazienti.push(Object.assign({id:uid()},data));
+  save();clearForm();renderPaz();
+};
+$('#fCancel').onclick=clearForm;
+function renderPaz(){
+  const q=$('#pzSearch').value.trim().toLowerCase();const t=today();
+  const list=S.pazienti.filter(p=>!q||fullName(p).toLowerCase().includes(q)).sort(byName);
+  if(!list.length){$('#pzList').innerHTML='<tr><td colspan="9" class="mute">'+(S.pazienti.length?'Nessun risultato.':'Nessun paziente inserito.')+'</td></tr>';return;}
+  $('#pzList').innerHTML=list.map(p=>{
+    const ss=S.sedute.filter(s=>s.pid===p.id);
+    const f=ss.filter(s=>s.stato==='fatta').length,d=ss.filter(s=>s.stato==='disdetta').length,sa=ss.filter(s=>s.stato==='saltata').length;
+    const tot=f+d+sa;const pct=tot?Math.round((d+sa)/tot*100)+'%':'—';
+    const next=ss.filter(s=>s.data>=t&&s.stato==='prevista').sort(byTime)[0];
+    return '<tr data-id="'+p.id+'"><td style="white-space:nowrap"><strong>'+esc(fullName(p))+'</strong><span class="tag'+(p.modalita==='online'?' on':'')+'">'+(p.forma==='tu'?'tu':'Lei')+' · '+(p.modalita==='online'?'online':'studio')+'</span></td>'+
+      '<td style="white-space:nowrap">'+(p.tel?esc(p.tel):'<span class="warn">manca</span>')+'</td>'+
+      '<td class="n">'+(p.tariffa?eur(p.tariffa):'—')+'</td><td class="n">'+f+'</td><td class="n">'+d+'</td><td class="n">'+sa+'</td><td class="n">'+pct+'</td>'+
+      '<td style="white-space:nowrap;text-transform:capitalize">'+(next?esc(fmtShort(next.data)+' · '+next.ora):'<span class="mute">—</span>')+'</td>'+
+      '<td style="white-space:nowrap;text-align:right"><button class="b s pEdit">Modifica</button> <button class="b s d pDel">Elimina</button></td></tr>';
+  }).join('');
+}
+$('#pzList').addEventListener('click',e=>{
+  const tr=e.target.closest('tr');if(!tr||!tr.dataset.id)return;const p=pz(tr.dataset.id);if(!p)return;
+  if(e.target.classList.contains('pEdit')){
+    $('#fId').value=p.id;$('#fNome').value=p.nome;$('#fCognome').value=p.cognome;$('#fTel').value=p.tel;
+    $('#fForma').value=p.forma;$('#fMod').value=p.modalita;$('#fLink').value=p.link||'';$('#fTar').value=p.tariffa==null?'':p.tariffa;
+    $('#fTitle').textContent='Modifica: '+fullName(p);$('#fCancel').classList.remove('hide');window.scrollTo(0,0);
+  } else if(e.target.classList.contains('pDel')){
+    const n=S.sedute.filter(s=>s.pid===p.id).length;
+    if(!confirm('Eliminare '+fullName(p)+(n?' e tutte le sue '+n+' sedute (anche passate e pagamenti)':'')+'?'))return;
+    S.pazienti=S.pazienti.filter(x=>x.id!==p.id);S.sedute=S.sedute.filter(s=>s.pid!==p.id);
+    Object.keys(S.gmap).forEach(k=>{if(S.gmap[k]===p.id)delete S.gmap[k];});
+    save();renderPaz();
+  }
+});
+$('#pzSearch').addEventListener('input',renderPaz);
+
+/* ---------- PAGAMENTI ---------- */
+function renderPag(){
+  if(!$('#gMese').value) $('#gMese').value=today().slice(0,7);
+  const mese=$('#gMese').value;
+  const ms=S.sedute.filter(s=>s.data.slice(0,7)===mese).sort(byTime);
+  const dov=ms.filter(dovuta);
+  const inc=dov.filter(s=>s.pagato).reduce((a,s)=>a+importo(s),0);
+  const da=dov.filter(s=>!s.pagato).reduce((a,s)=>a+importo(s),0);
+  $('#gKpi').innerHTML='<div><span class="mute">Sedute fatte</span><b>'+ms.filter(s=>s.stato==='fatta').length+'</b></div>'+
+    '<div><span class="mute">Incassato</span><b>'+eur(inc)+'</b></div>'+
+    '<div><span class="mute">Da incassare</span><b>'+eur(da)+'</b></div>'+
+    '<div><span class="mute">Disdette / saltate</span><b>'+ms.filter(s=>s.stato==='disdetta').length+' / '+ms.filter(s=>s.stato==='saltata').length+'</b></div>';
+  const deb={};S.sedute.filter(s=>dovuta(s)&&!s.pagato&&importo(s)>0).forEach(s=>{(deb[s.pid]=deb[s.pid]||[]).push(s);});
+  const ids=Object.keys(deb).filter(pz).sort((a,b)=>byName(pz(a),pz(b)));
+  $('#gDebiti').innerHTML=ids.length?'<table><thead><tr><th>Paziente</th><th>Sedute</th><th class="n">Totale</th><th></th></tr></thead><tbody>'+ids.map(id=>{
+    const l=deb[id].sort(byTime);
+    return '<tr data-pid="'+id+'"><td style="white-space:nowrap"><strong>'+esc(fullName(pz(id)))+'</strong></td><td class="mute">'+l.map(s=>esc(parse(s.data).toLocaleDateString('it-IT',{day:'numeric',month:'short'}))+(s.stato==='saltata'?' (saltata)':'')).join(', ')+'</td>'+
+      '<td class="n"><strong>'+eur(l.reduce((a,s)=>a+importo(s),0))+'</strong></td><td style="text-align:right"><button class="b s payAll">Tutto pagato</button></td></tr>';
+  }).join('')+'</tbody></table>':'<p class="mute" style="margin:0">Nessuno ti deve niente. Per ora.</p>';
+  $('#gMov').innerHTML=ms.length?'<table><thead><tr><th>Data</th><th>Paziente</th><th>Stato</th><th class="n">Importo</th><th>Pagata</th></tr></thead><tbody>'+ms.map(s=>
+    '<tr data-id="'+s.id+'" class="st-'+s.stato+'"><td style="white-space:nowrap;text-transform:capitalize">'+esc(fmtShort(s.data))+' · '+esc(s.ora)+'</td><td style="white-space:nowrap"><strong>'+esc(fullName(pz(s.pid)))+'</strong></td><td>'+esc(STATI[s.stato])+'</td>'+
+    '<td class="n">'+(dovuta(s)?eur(importo(s)):'<span class="mute">—</span>')+'</td>'+
+    '<td>'+(dovuta(s)?'<input type="checkbox" class="gPag"'+(s.pagato?' checked':'')+'>':'')+'</td></tr>').join('')+'</tbody></table>':'<p class="mute" style="margin:0">Nessuna seduta in questo mese.</p>';
+}
+$('#gMese').addEventListener('change',renderPag);
+$('#gMov').addEventListener('change',e=>{
+  if(!e.target.classList.contains('gPag'))return;const s=S.sedute.find(x=>x.id===e.target.closest('tr').dataset.id);
+  if(s){s.pagato=e.target.checked;save();renderPag();}
+});
+$('#gDebiti').addEventListener('click',e=>{
+  if(!e.target.classList.contains('payAll'))return;const pid=e.target.closest('tr').dataset.pid;
+  if(!confirm('Segnare come pagate tutte le sedute in sospeso di '+fullName(pz(pid))+'?'))return;
+  S.sedute.forEach(s=>{if(s.pid===pid&&dovuta(s))s.pagato=true;});save();renderPag();
+});
+$('#gCsv').onclick=()=>{
+  const mese=$('#gMese').value;const ms=S.sedute.filter(s=>s.data.slice(0,7)===mese).sort(byTime);
+  const q=v=>'"'+String(v).replace(/"/g,'""')+'"';
+  const rows=[['Data','Ora','Cognome','Nome','Stato','Importo','Pagata']].concat(ms.map(s=>{const p=pz(s.pid)||{};
+    return[parse(s.data).toLocaleDateString('it-IT'),s.ora,p.cognome||'',p.nome||'',STATI[s.stato],dovuta(s)?String(importo(s)).replace('.',','):'',dovuta(s)?(s.pagato?'sì':'no'):''];}));
+  shareFile('sedute-'+mese+'.csv','\ufeff'+rows.map(r=>r.map(q).join(';')).join('\r\n'),'text/csv');
+};
+
+/* ---------- MESSAGGI ---------- */
+function renderMsgTab(){$('#mLei').value=S.settings.msgLei;$('#mTu').value=S.settings.msgTu;}
+$('#mGo').onclick=()=>{
+  S.settings.msgLei=$('#mLei').value;S.settings.msgTu=$('#mTu').value;save();
+  const v=$('#mDest').value,t=today();let list=[...S.pazienti];
+  if(v!=='all'){const lim=addDays(t,+v);list=list.filter(p=>S.sedute.some(s=>s.pid===p.id&&s.data>=t&&s.data<=lim&&s.stato!=='disdetta'));}
+  list.sort(byName);
+  $('#mCard').classList.remove('hide');$('#mCount').textContent=list.length+' pazienti';
+  $('#mList').innerHTML=list.length?list.map(p=>{
+    const num=waNum(p.tel);const txt=fill(p.forma==='tu'?S.settings.msgTu:S.settings.msgLei,{nome:p.nome,cognome:p.cognome,firma:S.settings.firma});
+    return '<div class="item" data-id="'+p.id+'" style="grid-template-columns:minmax(0,1fr) auto"><div><strong>'+esc(fullName(p))+'</strong>'+(num?'':' <span class="warn">manca il cellulare</span>')+
+      '<textarea class="pm" rows="4" style="margin-top:6px">'+esc(txt)+'</textarea></div>'+
+      '<div><a class="wa'+(num?'':' off')+'" target="_blank" rel="noopener" href="'+(num?esc(waUrl(num,txt)):'#')+'">WhatsApp</a></div></div>';
+  }).join(''):'<p class="mute" style="margin:0">Nessun paziente corrisponde.</p>';
+};
+$('#mList').addEventListener('click',e=>{
+  const a=e.target.closest('a.wa');if(!a)return;const it=a.closest('.item');const p=pz(it.dataset.id);
+  if(!p){e.preventDefault();return;}
+  a.href=waUrl(waNum(p.tel),it.querySelector('textarea').value);
+  setTimeout(()=>{a.classList.add('sent');a.textContent='Aperto';},300);
+});
+
+/* ---------- IMPOSTAZIONI ---------- */
+function renderImp(){
+  const st=S.settings;
+  $('#gUrl').textContent=location.protocol==='file:'?'(sarà visibile quando l\'app è online)':appUrl();
+  $('#iClient').value=st.gClient||'';
+  const sel=$('#iCal');
+  if(gCals) sel.innerHTML='<option value="">— scegli —</option>'+gCals.map(c=>'<option value="'+esc(c.id)+'"'+(c.id===st.gCal?' selected':'')+'>'+esc(c.name)+'</option>').join('');
+  else sel.innerHTML=st.gCal?'<option value="'+esc(st.gCal)+'" selected>'+esc(st.gCalName||st.gCal)+'</option>':'<option value="">— prima collega Google —</option>';
+  const mk=Object.keys(S.gmap).sort();
+  $('#mapDone').innerHTML=mk.length?'<div class="scroll"><table><tbody>'+mk.map(k=>{const v=S.gmap[k];
+    return '<tr data-k="'+esc(k)+'"><td>"'+esc(k)+'"</td><td>'+(v==='x'?'<span class="mute">ignorato</span>':esc(fullName(pz(v))))+'</td><td style="text-align:right"><button class="b s unmap">Scollega</button></td></tr>';}).join('')+'</tbody></table></div>':'Nessuno per ora.';
+  $('#iFirma').value=st.firma;$('#iInd').value=st.indirizzo;$('#iPref').value=st.prefisso;$('#iDur').value=st.durata;
+  $('#iSalt').checked=!!st.saltatePagate;
+  $('#iLei').value=st.tplLei;$('#iTu').value=st.tplTu;$('#iCLei').value=st.confLei;$('#iCTu').value=st.confTu;$('#iMsg').textContent='';
+  $('#bInfo').textContent=st.lastBackup?'Ultimo backup: '+new Date(st.lastBackup).toLocaleString('it-IT'):'Nessun backup fatto finora.';
+}
+$('#mapDone').addEventListener('click',e=>{
+  if(!e.target.classList.contains('unmap'))return;const k=e.target.closest('tr').dataset.k;
+  if(!confirm('Scollegare "'+k+'"? Le sue sedute future arrivate da Google verranno tolte e il titolo ti verrà richiesto.'))return;
+  delete S.gmap[k];gProcess();save();renderImp();
+});
+$('#iSave').onclick=()=>{
+  Object.assign(S.settings,{firma:$('#iFirma').value.trim(),indirizzo:$('#iInd').value.trim(),prefisso:($('#iPref').value.replace(/\D/g,'')||'39'),
+    durata:Math.max(5,+$('#iDur').value||50),saltatePagate:$('#iSalt').checked,tplLei:$('#iLei').value,tplTu:$('#iTu').value,confLei:$('#iCLei').value,confTu:$('#iCTu').value,
+    gClient:$('#iClient').value.trim()});
+  save();$('#iMsg').textContent='Salvato.';
+};
+$('#iReset').onclick=()=>{$('#iLei').value=TPL_LEI;$('#iTu').value=TPL_TU;$('#iCLei').value=CONF_LEI;$('#iCTu').value=CONF_TU;$('#iMsg').textContent='Testi ripristinati: premi Salva per confermarli.';};
+$('#bExp').onclick=()=>{
+  S.settings.lastBackup=new Date().toISOString();save();
+  shareFile('backup-sedute-'+today()+'.json',JSON.stringify(S),'application/json');renderImp();
+};
+$('#bImp').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const d=JSON.parse(r.result);
+      if(!d||!Array.isArray(d.pazienti)||!Array.isArray(d.sedute)) throw 0;
+      if(!confirm('Sostituire i dati attuali con il backup ('+d.pazienti.length+' pazienti, '+d.sedute.length+' sedute)?'))return;
+      S=d;migrate();save();render();alert('Backup ripristinato.');
+    }catch(err){alert('Questo file non è un backup valido.');}
+    e.target.value='';
+  };
+  r.readAsText(f);
+});
+
+/* ---------- tabs e avvio ---------- */
+$('#nav').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-tab]');if(!b)return;showTab(b.dataset.tab);
+});
+function showTab(t){
+  document.querySelectorAll('#nav button').forEach(x=>x.classList.toggle('on',x.dataset.tab===t));
+  ['prom','agenda','paz','pag','msg','imp'].forEach(k=>$('#tab-'+k).classList.toggle('hide',k!==t));
+  render();window.scrollTo(0,0);
+}
+function render(){
+  const tab=document.querySelector('#nav button.on').dataset.tab;
+  ({prom:renderProm,agenda:renderAgenda,paz:renderPaz,pag:renderPag,msg:renderMsgTab,imp:renderImp})[tab]();
+  banner();
+}
+load();save();
+$('#pdate').value=addDays(today(),1);
+$('#sData').value=addDays(today(),1);
+$('#aFrom').value=today();
+const back=gHandleRedirect();
+if(back&&!S.settings.gCal){showTab('imp');gLoadCalendars();}
+else{
+  render();
+  if(back) gSync(false);
+  else if(S.settings.gCal&&gTok()&&(!S.gcache||Date.now()-new Date(S.gcache.at)>5*60000)) gSync(true);
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&S.settings.gCal&&gTok()&&S.gcache&&Date.now()-new Date(S.gcache.at)>5*60000)gSync(true);});
+})();
+</script>
+</body>
+</html>
