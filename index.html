@@ -83,6 +83,23 @@ code{background:#efeee9;padding:1px 5px;border-radius:4px;font-size:13px;overflo
 .gbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
 .maprow{border-top:1px solid var(--line);padding:10px 0;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
 .maprow:first-of-type{border-top:0}
+.send{border-top:1px solid var(--line);padding:10px 0}
+.send:first-child{border-top:0}
+.sh{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.sb{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.pill{display:inline-block;font-size:12px;padding:1px 8px;border-radius:10px;margin-left:4px;font-weight:600}
+.pill.conf{background:#e3f1ea;color:#1d6b46}.pill.prom{background:#e8eefc;color:#2848a8}.pill.disd{background:#fdeee6;color:#9a3d0c}
+.se{margin-top:8px}
+.prev{color:var(--mute);font-size:13px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+details.card>summary{cursor:pointer;list-style:none}
+details.card>summary::-webkit-details-marker{display:none}
+details.card>summary::after{content:' ▾';color:var(--mute)}
+.det{background:#faf9f7}
+.det td{padding:12px}
+.sede{display:flex;flex-wrap:wrap;gap:8px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:8px}
+.days{display:flex;gap:4px;flex-wrap:wrap}
+.days label{flex-direction:row;align-items:center;gap:3px;font-size:13px;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:4px 6px}
+.days input{width:16px;height:16px}
 @media(max-width:640px){
   main{padding:12px}
   .item{grid-template-columns:50px minmax(0,1fr)}
@@ -120,24 +137,25 @@ code{background:#efeee9;padding:1px 5px;border-radius:4px;font-size:13px;overflo
       <p class="mute" style="margin-top:0">Dimmi a quale paziente corrisponde ogni titolo del calendario. Lo fai una volta sola: poi lo riconosco da solo.</p>
       <div id="mapList"></div>
     </div>
-    <div class="card hide" id="confCard">
-      <div class="gbar" style="margin-bottom:4px"><h2 style="margin:0">Da confermare <span class="mute" id="confN"></span></h2>
-        <button class="b s" id="confAll">Segna tutte come già confermate</button></div>
-      <div id="confList"></div>
+    <div class="card hide" id="bkCard"><div class="gbar"><div><strong>Backup</strong><div class="mute" id="bkTxt"></div></div><button class="b p" id="bkBtn">Salva backup ora</button></div></div>
+    <div class="card" id="sendCard">
+      <div class="gbar" style="margin-bottom:6px"><h2 style="margin:0">Da inviare <span class="mute" id="sendN"></span></h2>
+        <button class="b s hide" id="confAll">Conferme: segna tutte già fatte</button></div>
+      <div id="sendList"></div>
     </div>
     <div class="card hide" id="chiudiCard">
       <h2>Sedute da segnare <span class="mute" id="chiudiN"></span></h2>
       <div id="chiudiList"></div>
     </div>
-    <div class="card">
-      <div class="row">
-        <label>Promemoria per il giorno<input type="date" id="pdate"></label>
+    <details class="card" id="otherDay"><summary><strong>Promemoria per un altro giorno</strong></summary>
+      <div class="row" style="margin-top:10px">
+        <label>Giorno<input type="date" id="pdate"></label>
         <button class="b" id="pOggi">Oggi</button>
         <button class="b" id="pDomani">Domani</button>
       </div>
       <div class="mute" id="pCount" style="margin-top:8px"></div>
-    </div>
-    <div class="card" id="pList"></div>
+      <div id="pList" style="margin-top:4px"></div>
+    </details>
   </section>
 
   <!-- AGENDA -->
@@ -254,10 +272,14 @@ code{background:#efeee9;padding:1px 5px;border-radius:4px;font-size:13px;overflo
       <h2>Dati dello studio</h2>
       <div class="row">
         <label style="flex:1 1 200px">Firma<input id="iFirma" placeholder="Dott.ssa ..."></label>
-        <label style="flex:2 1 260px">Indirizzo dello studio<input id="iInd" placeholder="Via ..., Città"></label>
+        <label style="flex:2 1 260px">Indirizzo negli altri giorni (facoltativo)<input id="iInd" placeholder="Via ..., Città"></label>
         <label>Prefisso<input id="iPref" class="mini" inputmode="numeric"></label>
         <label>Durata seduta (min)<input id="iDur" type="number" min="10" step="5" class="mini" inputmode="numeric"></label>
       </div>
+      <h2 style="margin-top:18px">Studi per giorno della settimana</h2>
+      <p class="mute" style="margin-top:0">Il messaggio dice "presso …" seguito da quello che scrivi qui, in base al giorno della seduta. Se una seduta in studio cade in un giorno senza studio, l'app ti avvisa.</p>
+      <div id="sediList"></div>
+      <button class="b s" id="sedeAdd">+ Aggiungi studio</button>
       <div class="row" style="margin-top:12px"><label class="inline"><input type="checkbox" id="iSalt"> Le sedute saltate senza avviso si pagano</label></div>
     </div>
     <div class="card">
@@ -269,6 +291,10 @@ code{background:#efeee9;padding:1px 5px;border-radius:4px;font-size:13px;overflo
       <p class="mute">Segnaposto: <code>{nome}</code> <code>{cognome}</code> <code>{appuntamento}</code> <code>{luogo}</code> <code>{calendario}</code> (link per salvarla in calendario) <code>{firma}</code></p>
       <label>Lei<textarea id="iCLei"></textarea></label>
       <label style="margin-top:10px">Tu<textarea id="iCTu"></textarea></label>
+      <h2 style="margin-top:18px">Testo dopo una disdetta</h2>
+      <p class="mute">Segnaposto: <code>{nome}</code> <code>{cognome}</code> <code>{quando}</code> <code>{ora}</code> <code>{firma}</code></p>
+      <label>Lei<textarea id="iDLei"></textarea></label>
+      <label style="margin-top:10px">Tu<textarea id="iDTu"></textarea></label>
       <div class="row" style="margin-top:12px">
         <button class="b p" id="iSave">Salva impostazioni</button>
         <button class="b" id="iReset">Testi predefiniti</button>
@@ -298,9 +324,13 @@ const V2_TU='Ciao {nome}, ti ricordo il nostro appuntamento di {quando} alle {or
 const TPL_LEI=OLD_LEI, TPL_TU=OLD_TU;
 const CONF_LEI='Gentile {nome} {cognome}, le confermo {appuntamento}{luogo}.\nPer salvare in calendario: {calendario}\nCordiali saluti,\n{firma}';
 const CONF_TU='Ciao {nome}, ti confermo {appuntamento}{luogo}.\nPer salvare in calendario: {calendario}\nA presto,\n{firma}';
+const DISD_LEI='Gentile {nome} {cognome}, ho registrato la disdetta della seduta di {quando} alle ore {ora}. Se desidera recuperarla, mi indichi le sue disponibilità e troviamo un altro orario.\nCordiali saluti,\n{firma}';
+const DISD_TU='Ciao {nome}, ho segnato la disdetta della seduta di {quando} alle {ora}. Se vuoi recuperarla, dimmi le tue disponibilità e troviamo un altro orario.\nA presto,\n{firma}';
+const SEDI_DEF=[{giorni:[2,3],luogo:'lo studio di via Pietro Maestri 3 (zona Corso Francia)'},{giorni:[4],luogo:'il Centro di Terapia Metacognitiva Interpersonale, via Orazio 3'}];
+const GG=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
 const MSG_LEI='Gentile {nome} {cognome}, la informo che lo studio resterà chiuso dal ... al .... Le sedute riprenderanno regolarmente da ....\nCordiali saluti,\n{firma}';
 const MSG_TU='Ciao {nome}, ti avviso che lo studio resterà chiuso dal ... al .... Ci rivediamo da ....\nA presto,\n{firma}';
-const DEF={settings:{firma:'',indirizzo:'',prefisso:'39',durata:50,saltatePagate:false,tplLei:TPL_LEI,tplTu:TPL_TU,confLei:CONF_LEI,confTu:CONF_TU,msgLei:MSG_LEI,msgTu:MSG_TU,lastBackup:null,gClient:'',gCal:'',gCalName:'',gSince:null},
+const DEF={settings:{firma:'',indirizzo:'',prefisso:'39',durata:50,saltatePagate:false,tplLei:TPL_LEI,tplTu:TPL_TU,confLei:CONF_LEI,confTu:CONF_TU,msgLei:MSG_LEI,msgTu:MSG_TU,disdLei:DISD_LEI,disdTu:DISD_TU,sedi:null,lastBackup:null,gClient:'',gCal:'',gCalName:'',gSince:null},
   pazienti:[],sedute:[],gmap:{},gser:{},gcache:null};
 const STATI={prevista:'Prevista',fatta:'Fatta',disdetta:'Disdetta',saltata:'Saltata senza avviso'};
 const G_SCOPE='https://www.googleapis.com/auth/calendar.readonly';
@@ -324,6 +354,8 @@ const byName=(a,b)=>fullName(a).localeCompare(fullName(b),'it');
 const byTime=(a,b)=>(a.data+a.ora).localeCompare(b.data+b.ora);
 const mondayOf=s=>{const d=parse(s);const w=(d.getDay()+6)%7;d.setDate(d.getDate()-w);return ymd(d)};
 const norm=t=>String(t||'').toLowerCase().replace(/\s+/g,' ').trim();
+const isOnline=t=>/(^|[^a-zà-ú])on-?line([^a-zà-ú]|$)/i.test(t||'');
+const tKey=t=>norm(String(t||'').replace(/on-?line/ig,' ').replace(/[-–—()\[\]:,.+]+/g,' '));
 const mobile=()=>window.matchMedia&&matchMedia('(pointer:coarse)').matches;
 const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
@@ -340,8 +372,9 @@ function migrate(){
   if(S.settings.tplTu===V2_TU) S.settings.tplTu=TPL_TU;
   S.settings.tplLei=S.settings.tplLei.replace(/\{calendario\}/g,'');S.settings.tplTu=S.settings.tplTu.replace(/\{calendario\}/g,'');
   delete S.settings.linkCal;
+  if(!Array.isArray(S.settings.sedi)) S.settings.sedi=JSON.parse(JSON.stringify(SEDI_DEF));
   S.pazienti=(S.pazienti||[]).map(p=>Object.assign({tariffa:null,link:'',cognome:'',tel:'',forma:'lei',modalita:'studio'},p));
-  S.sedute=(S.sedute||[]).map(s=>Object.assign({stato:'prevista',pagato:false,importo:null,modalita:'',inviato:false,serie:null,step:null,confermata:false,gid:null,spostata:false},s));
+  S.sedute=(S.sedute||[]).map(s=>Object.assign({stato:'prevista',pagato:false,importo:null,modalita:'',inviato:false,serie:null,step:null,confermata:false,gid:null,spostata:false,link:'',disdAt:null,disdInviato:false},s));
   S.gmap=S.gmap||{};S.gser=S.gser||{};S.gcache=S.gcache||null;
 }
 function save(){
@@ -351,11 +384,7 @@ function save(){
 function banner(){
   const b=$('#banner');let t='';
   if(!storageOk) t='Attenzione: questo browser non permette di salvare i dati. Quello che inserisci andrà perso alla chiusura.';
-  else if(S.pazienti.length){
-    const lb=S.settings.lastBackup;
-    if(!lb) t='Non hai ancora fatto un backup. Vai su Impostazioni → Salva backup.';
-    else if((new Date()-new Date(lb))/864e5>7) t='Ultimo backup più di una settimana fa. Conviene farne uno nuovo (Impostazioni → Salva backup).';
-  }
+
   b.textContent=t;b.classList.toggle('hide',!t);
 }
 
@@ -380,13 +409,16 @@ function startEnd(s){
 }
 const utc=d=>d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
 function evTitle(){return 'Appuntamento'+(S.settings.firma?' con '+S.settings.firma:'');}
-function evPlace(s,p){return modalita(s,p)==='online'?(p&&p.link?p.link:'Online'):(S.settings.indirizzo||'');}
+function sedeFor(data){const wd=parse(data).getDay();return (S.settings.sedi||[]).find(x=>(x.giorni||[]).indexOf(wd)>=0&&x.luogo)||null;}
+function linkOf(s,p){return s.link||(p&&p.link)||'';}
+function noStudio(s){const p=pz(s.pid);return modalita(s,p)==='studio'&&(S.settings.sedi||[]).length>0&&!sedeFor(s.data);}
+function evPlace(s,p){if(modalita(s,p)==='online')return linkOf(s,p)||'Online';const sd=sedeFor(s.data);return sd?sd.luogo:(S.settings.indirizzo||'');}
 function gcalUrl(s,r){
   const p=pz(s.pid);const[a,b]=startEnd(s);
   const q=new URLSearchParams({action:'TEMPLATE',text:evTitle(),dates:utc(a)+'/'+utc(b)});
   if(r)q.set('recur',r.rrule);
   const loc=evPlace(s,p);if(loc)q.set('location',loc);
-  if(modalita(s,p)==='online'&&p&&p.link)q.set('details','Link: '+p.link);
+  if(modalita(s,p)==='online'&&linkOf(s,p))q.set('details','Link: '+linkOf(s,p));
   return 'https://calendar.google.com/calendar/render?'+q.toString();
 }
 function icsText(s,r){
@@ -396,7 +428,7 @@ function icsText(s,r){
     'UID:'+s.id+'@sedute','DTSTAMP:'+utc(new Date()),'DTSTART:'+utc(a),'DTEND:'+utc(b),'SUMMARY:'+e(evTitle())];
   if(r)L.push(r.rrule);
   const loc=evPlace(s,p);if(loc)L.push('LOCATION:'+e(loc));
-  if(modalita(s,p)==='online'&&p&&p.link)L.push('DESCRIPTION:'+e('Link: '+p.link));
+  if(modalita(s,p)==='online'&&linkOf(s,p))L.push('DESCRIPTION:'+e('Link: '+linkOf(s,p)));
   L.push('BEGIN:VALARM','TRIGGER:-PT2H','ACTION:DISPLAY','DESCRIPTION:'+e(evTitle()),'END:VALARM','END:VEVENT','END:VCALENDAR');
   return L.join('\r\n')+'\r\n';
 }
@@ -414,13 +446,18 @@ function fill(tpl,map){
     .replace(/ {2,}/g,' ').replace(/ +([,.;:])/g,'$1').split('\n').map(l=>l.replace(/[ \t]+$/,'')).filter((l,i,arr)=>l!==''||(i>0&&arr[i-1]!=='')).join('\n').trim();
 }
 function luogoText(sd,p){
-  const tu=p.forma==='tu';
-  if(modalita(sd,p)==='online') return ' online'+(p.link?(tu?'. Ecco il link: ':'. Il link per collegarsi è: ')+p.link:'');
+  const tu=p.forma==='tu';const ln=linkOf(sd,p);
+  if(modalita(sd,p)==='online') return ' online'+(ln?(tu?'. Ecco il link: ':'. Il link per collegarsi è: ')+ln:'');
+  const se=sedeFor(sd.data);if(se) return ' presso '+se.luogo;
   return S.settings.indirizzo?' presso lo studio in '+S.settings.indirizzo:'';
+}
+function buildDisd(sd){
+  const p=pz(sd.pid);if(!p) return '';
+  return fill(p.forma==='tu'?S.settings.disdTu:S.settings.disdLei,{nome:p.nome,cognome:p.cognome,quando:quando(sd.data),ora:sd.ora,firma:S.settings.firma});
 }
 function buildMsg(sd){
   const p=pz(sd.pid);if(!p) return '';
-  return fill(p.forma==='tu'?S.settings.tplTu:S.settings.tplLei,{nome:p.nome,cognome:p.cognome,quando:quando(sd.data),ora:sd.ora,luogo:luogoText(sd,p),firma:S.settings.firma,indirizzo:S.settings.indirizzo,link:p.link||''});
+  return fill(p.forma==='tu'?S.settings.tplTu:S.settings.tplLei,{nome:p.nome,cognome:p.cognome,quando:quando(sd.data),ora:sd.ora,luogo:luogoText(sd,p),firma:S.settings.firma,indirizzo:S.settings.indirizzo,link:linkOf(sd,p)});
 }
 function stepFromRrule(rr){
   if(!/FREQ=WEEKLY/.test(rr))return null;const m=rr.match(/INTERVAL=(\d+)/);return 7*(m?+m[1]:1);
@@ -472,13 +509,13 @@ document.addEventListener('click',e=>{
   const box=e.target.closest('.confbox');if(!box)return;
   const s=S.sedute.find(x=>x.id===box.dataset.id);if(!s)return;const p=pz(s.pid);
   if(e.target.closest('.ics2')){shareFile('appuntamento-'+s.data+'.ics',icsText(s,serieInfo(s)),'text/calendar');return;}
-  const mark=()=>{S.sedute.forEach(x=>{if(sameGroup(s,x)){x.confermata=true;x.spostata=false;}});save();};
+  const mark=()=>{const tm=addDays(today(),1);S.sedute.forEach(x=>{if(sameGroup(s,x)){x.confermata=true;x.spostata=false;if(x.data<=tm)x.inviato=true;}});save();};
   if(e.target.closest('.skip')){mark();render();return;}
   const a=e.target.closest('a.wa');if(!a)return;
   if(!p||!waNum(p.tel)){e.preventDefault();return;}
   a.href=waUrl(waNum(p.tel),box.querySelector('textarea.cm').value);
   mark();
-  setTimeout(()=>{a.classList.add('sent');a.textContent='Inviata · riapri';if(box.closest('#confList'))setTimeout(renderProm,1500);},300);
+  setTimeout(()=>{a.classList.add('sent');a.textContent='Inviata · riapri';},300);
 });
 
 /* ---------- GOOGLE ---------- */
@@ -531,7 +568,9 @@ async function gSync(auto){
     do{if(pt)p.pageToken=pt;const d=await gGet('calendars/'+encodeURIComponent(S.settings.gCal)+'/events',p);items=items.concat(d.items||[]);pt=d.nextPageToken;}while(pt&&++guard<20);
     S.gcache={from:from,to:to,at:new Date().toISOString(),ev:items.filter(e=>e.status!=='cancelled'&&e.start&&e.start.dateTime).map(e=>{
       const d=new Date(e.start.dateTime);
-      return{id:e.id,t:(e.summary||'(senza titolo)').trim(),data:ymd(d),ora:pad(d.getHours())+':'+pad(d.getMinutes()),c:e.created||'',r:e.recurringEventId||''};})};
+      const vid=e.conferenceData&&(e.conferenceData.entryPoints||[]).find(x=>x.entryPointType==='video');
+      const t0=(e.summary||'(senza titolo)').trim();
+      return{id:e.id,t:t0,data:ymd(d),ora:pad(d.getHours())+':'+pad(d.getMinutes()),c:e.created||'',r:e.recurringEventId||'',o:isOnline(t0),m:e.hangoutLink||(vid&&vid.uri)||''};})};
     if(!S.settings.gSince)S.settings.gSince=new Date().toISOString();
     const res=gProcess();
     await gFetchSeries();
@@ -553,16 +592,17 @@ function gProcess(){
   const c=S.gcache;if(!c)return'';
   const t=today();let nNew=0,nMov=0;const keep=new Set();
   c.ev.forEach(e=>{
-    const pid=S.gmap[norm(e.t)];if(!pid||pid==='x'||!pz(pid))return;
+    const pid=S.gmap[tKey(e.t)];if(!pid||pid==='x'||!pz(pid))return;
     keep.add(e.id);
     const serie=e.r?'g:'+e.r:null;
     let s=S.sedute.find(x=>x.gid===e.id);
+    const mod=e.o?'online':'',lnk=e.m||'';
     if(s){
-      s.pid=pid;s.serie=serie;
+      s.pid=pid;s.serie=serie;s.modalita=mod;s.link=lnk;
       if(s.data!==e.data||s.ora!==e.ora){s.data=e.data;s.ora=e.ora;s.inviato=false;if(e.data>=t&&s.stato==='prevista'){s.confermata=false;s.spostata=true;}nMov++;}
     } else {
-      S.sedute.push({id:uid(),gid:e.id,pid:pid,data:e.data,ora:e.ora,modalita:'',inviato:false,serie:serie,step:null,stato:'prevista',pagato:false,importo:null,
-        confermata:e.data<t||(!!e.c&&e.c<S.settings.gSince),spostata:false});
+      S.sedute.push({id:uid(),gid:e.id,pid:pid,data:e.data,ora:e.ora,modalita:mod,link:lnk,inviato:false,serie:serie,step:null,stato:'prevista',pagato:false,importo:null,
+        confermata:e.data<t||(!!e.c&&e.c<S.settings.gSince),spostata:false,disdAt:null,disdInviato:false});
       nNew++;
     }
   });
@@ -573,8 +613,8 @@ function gProcess(){
 }
 function unmapped(){
   const c=S.gcache;if(!c)return[];const t=today();const g={};
-  c.ev.forEach(e=>{const k=norm(e.t);if(S.gmap[k]&&(S.gmap[k]==='x'||pz(S.gmap[k])))return;
-    const o=g[k]||(g[k]={k:k,t:e.t,n:0,next:null,last:null});o.n++;
+  c.ev.forEach(e=>{const k=tKey(e.t);if(!k)return;if(S.gmap[k]&&(S.gmap[k]==='x'||pz(S.gmap[k])))return;
+    const o=g[k]||(g[k]={k:k,t:String(e.t).replace(/on-?line/ig,'').replace(/[-–—()\[\]:,]+\s*$/,'').trim()||e.t,n:0,next:null,last:null});o.n++;
     if(e.data>=t){if(!o.next||(e.data+e.ora)<o.next)o.next=e.data+' '+e.ora;}else{if(!o.last||(e.data+e.ora)>o.last)o.last=e.data+' '+e.ora;}});
   return Object.values(g).sort((a,b)=>(a.next||'9'+a.last).localeCompare(b.next||'9'+b.last));
 }
@@ -603,22 +643,67 @@ function renderGoogle(){
 $('#mapList').addEventListener('click',e=>{
   if(!e.target.classList.contains('mapOk'))return;
   const row=e.target.closest('.maprow');const k=row.dataset.k;let v=row.querySelector('.mapSel').value;if(!v)return;
-  const ev=(S.gcache.ev||[]).find(x=>norm(x.t)===k);
-  if(v==='+'){const parts=(ev?ev.t:k).trim().split(/\s+/);const np={id:uid(),nome:parts[0],cognome:parts.slice(1).join(' '),tel:'',forma:'lei',modalita:'studio',link:'',tariffa:null};S.pazienti.push(np);v=np.id;}
+  const ev=(S.gcache.ev||[]).find(x=>tKey(x.t)===k);
+  if(v==='+'){const parts=(ev?ev.t.replace(/on-?line/ig,' ').replace(/[-–—()\[\]:,]+/g,' '):k).trim().split(/\s+/);const np={id:uid(),nome:parts[0],cognome:parts.slice(1).join(' '),tel:'',forma:'lei',modalita:'studio',link:'',tariffa:null};S.pazienti.push(np);v=np.id;}
   S.gmap[k]=v;gProcess();save();gMsg('');
   if(v!=='x'&&!gTok()){renderProm();return;}
   gFetchSeries().then(()=>{save();renderProm();}).catch(()=>renderProm());
 });
-function renderConf(){
-  const t=today();
-  const all=S.sedute.filter(s=>s.data>=t&&s.stato==='prevista'&&!s.confermata&&pz(s.pid)).sort(byTime);
-  const seen=new Set();const heads=[];
-  all.forEach(s=>{const r=serieInfo(s);const k=r?s.serie:s.id;if(seen.has(k))return;seen.add(k);heads.push(s);});
-  $('#confCard').classList.toggle('hide',!heads.length);$('#confN').textContent='('+heads.length+')';
-  $('#confList').innerHTML=heads.map(s=>confBox(s,true)).join('');
+function sendItems(){
+  const t=today(),tm=addDays(t,1);const out=[];const seen=new Set();
+  S.sedute.filter(s=>s.data>=t&&s.stato==='prevista'&&!s.confermata&&pz(s.pid)).sort(byTime).forEach(s=>{
+    const r=serieInfo(s);const k=r?s.serie:s.id;if(seen.has(k))return;seen.add(k);out.push({type:'conf',s:s,r:r});});
+  S.sedute.filter(s=>s.stato==='disdetta'&&s.disdAt&&!s.disdInviato&&s.data>=addDays(t,-14)&&pz(s.pid)).sort(byTime).forEach(s=>out.push({type:'disd',s:s}));
+  S.sedute.filter(s=>s.data===tm&&s.stato==='prevista'&&!s.inviato&&s.confermata&&pz(s.pid)).sort(byTime).forEach(s=>out.push({type:'prom',s:s}));
+  return out;
 }
+const LBL={conf:'Conferma',prom:'Promemoria',disd:'Disdetta'};
+function textFor(it){return it.type==='conf'?buildConf(it.s):it.type==='disd'?buildDisd(it.s):buildMsg(it.s);}
+function renderSend(){
+  const items=sendItems();const t=today();
+  const sentTm=S.sedute.filter(s=>s.data===addDays(t,1)&&s.inviato).length;
+  $('#sendN').textContent=items.length?'('+items.length+')':'';
+  $('#confAll').classList.toggle('hide',items.filter(i=>i.type==='conf').length<3);
+  if(!items.length){$('#sendList').innerHTML='<p class="mute" style="margin:0">Niente da inviare.'+(sentTm?' Promemoria di domani già mandati: '+sentTm+'.':'')+'</p>';return;}
+  $('#sendList').innerHTML=items.map(it=>{
+    const s=it.s,p=pz(s.pid),num=waNum(p.tel),txt=textFor(it),mod=modalita(s,p);
+    const info=(it.type==='prom'?'domani':fmtShort(s.data))+' · '+s.ora;
+    const extra=(it.r?' · serie':'')+(s.spostata&&it.type==='conf'?' · spostata':'')+(mod==='online'?' · online':'');
+    const warns=(it.type!=='disd'&&noStudio(s)?'<div class="warn">Attenzione: quel giorno non sei in nessuno studio. È online?</div>':'')+
+      (it.type!=='disd'&&mod==='online'&&!linkOf(s,p)?'<div class="warn">Seduta online senza link: aggiungi Meet all\'evento su Google o il link nella scheda.</div>':'');
+    return '<div class="send" data-id="'+s.id+'" data-type="'+it.type+'"><div class="sh"><div style="min-width:0;flex:1 1 180px"><strong>'+esc(fullName(p))+'</strong><span class="pill '+it.type+'">'+LBL[it.type]+'</span>'+
+      '<div class="mute">'+esc(info+extra)+'</div>'+warns+'</div>'+
+      '<div class="sb">'+(num?'<a class="wa" target="_blank" rel="noopener" href="'+esc(waUrl(num,txt))+'">WhatsApp</a>':'<button class="b s goEdit" data-pid="'+esc(s.pid)+'" style="color:var(--warn)">Manca il cellulare</button>')+
+      '<button class="b s sEdit">Testo</button><button class="b s sDone" title="Segna come fatto senza inviare">Fatto</button></div></div>'+
+      '<div class="se hide"><textarea class="st" rows="6">'+esc(txt)+'</textarea>'+
+      (it.type==='conf'?'<button class="b s ics3" style="margin-top:6px">'+(mobile()?'Condividi invito calendario':'Scarica invito (.ics)')+'</button>':'')+'</div></div>';
+  }).join('');
+}
+function markSent(type,s){
+  if(type==='conf'){const tm=addDays(today(),1);S.sedute.forEach(x=>{if(sameGroup(s,x)){x.confermata=true;x.spostata=false;if(x.data<=tm)x.inviato=true;}});}
+  else if(type==='disd') s.disdInviato=true;
+  else s.inviato=true;
+  save();
+}
+$('#sendList').addEventListener('click',e=>{
+  const row=e.target.closest('.send');if(!row)return;
+  const s=S.sedute.find(x=>x.id===row.dataset.id);if(!s)return;const type=row.dataset.type;
+  if(e.target.closest('.sEdit')){row.querySelector('.se').classList.toggle('hide');return;}
+  if(e.target.closest('.ics3')){shareFile('appuntamento-'+s.data+'.ics',icsText(s,serieInfo(s)),'text/calendar');return;}
+  if(e.target.closest('.sDone')){markSent(type,s);renderProm();return;}
+  const a=e.target.closest('a.wa');if(!a)return;
+  const p=pz(s.pid);a.href=waUrl(waNum(p.tel),row.querySelector('textarea.st').value);
+  markSent(type,s);
+  setTimeout(()=>{a.classList.add('sent');a.textContent='Inviato';setTimeout(renderProm,1200);},250);
+});
+function needBackup(){if(!S.pazienti.length)return'';const lb=S.settings.lastBackup;
+  if(!lb)return'Non hai ancora fatto un backup.';const d=Math.floor((new Date()-new Date(lb))/864e5);
+  return d>=7?'Ultimo backup '+d+' giorni fa.':'';}
+function renderBackup(){const t=needBackup();$('#bkCard').classList.toggle('hide',!t);$('#bkTxt').textContent=t?t+' Sul telefono è l\'unica protezione dei dati.':'';}
+function doBackup(){S.settings.lastBackup=new Date().toISOString();save();shareFile('backup-sedute-'+today()+'.json',JSON.stringify(S),'application/json');}
+$('#bkBtn').onclick=()=>{doBackup();renderProm();};
 $('#confAll').onclick=()=>{
-  if(!confirm('Segnare tutte le sedute in elenco come già confermate ai pazienti?'))return;
+  if(!confirm('Segnare tutte le conferme in elenco come già fatte (senza inviare niente)?'))return;
   const t=today();S.sedute.forEach(s=>{if(s.data>=t&&!s.confermata){s.confermata=true;s.spostata=false;}});save();renderProm();
 };
 function renderChiudi(){
@@ -631,10 +716,25 @@ function renderChiudi(){
 $('#chiudiList').addEventListener('click',e=>{
   const b=e.target.closest('.setSt');if(!b)return;
   const s=S.sedute.find(x=>x.id===b.closest('.srow').dataset.id);if(!s)return;
-  s.stato=b.dataset.st;save();renderProm();
+  s.stato=b.dataset.st;if(s.stato==='disdetta')s.disdAt=new Date().toISOString();save();
+  if(dovuta(s)&&!s.pagato){
+    const imp=importo(s);
+    b.closest('.ctl').innerHTML='<span class="mute">Pagata?</span>'+(imp?'':'<input type="number" class="mini payImp" placeholder="€" inputmode="decimal">')+
+      '<button class="b s p payY">Sì'+(imp?' · '+esc(eur(imp)):'')+'</button><button class="b s payN">Non ancora</button>';
+    return;
+  }
+  renderProm();
 });
+$('#chiudiList').addEventListener('click',e=>{
+  const y=e.target.closest('.payY'),n=e.target.closest('.payN');if(!y&&!n)return;
+  const row=e.target.closest('.srow');const s=S.sedute.find(x=>x.id===row.dataset.id);
+  const ii=row.querySelector('.payImp');if(s&&ii&&ii.value!=='')s.importo=+ii.value;
+  if(s&&y)s.pagato=true;
+  save();renderProm();
+});
+
 function renderProm(){
-  renderGoogle();renderConf();renderChiudi();
+  renderGoogle();renderBackup();renderSend();renderChiudi();
   const d=$('#pdate').value;
   const all=S.sedute.filter(s=>s.data===d).sort(byTime);
   const list=all.filter(s=>s.stato!=='disdetta');
@@ -690,6 +790,7 @@ $('#sAdd').onclick=()=>{
     S.sedute.push(ns);if(!first)first=ns;
   }
   save();
+  if(noStudio(first))clash.push('inoltre '+GG[parse(data).getDay()].toLowerCase()+' non sei in nessuno studio: se è online cambia la modalità');
   m.className=clash.length?'warn':'ok';
   m.innerHTML=(n===1?'Seduta aggiunta.':n+' sedute aggiunte.')+(clash.length?'<br>Attenzione, alla stessa ora c\'è già qualcuno: '+esc(clash.join('; ')):'')+confBox(first,false);
   weekStart=mondayOf(data);renderAgenda();
@@ -732,7 +833,7 @@ function renderList(){
     const p=pz(s.pid);const mod=modalita(s,p);
     html+='<div class="srow st-'+s.stato+'" data-id="'+s.id+'"><div><strong>'+esc(s.ora)+'  '+esc(fullName(p))+'</strong>'+
       (s.gid?'<span class="tag g">Google</span>':'')+'<span class="tag'+(mod==='online'?' on':'')+'">'+mod+'</span>'+
-      '<div class="mute">'+(s.confermata?'confermata':'da confermare')+(s.inviato?' · promemoria inviato':'')+'</div></div>'+
+      '<div class="mute">'+(s.confermata?'confermata':'da confermare')+(s.inviato?' · promemoria inviato':'')+'</div>'+(noStudio(s)&&s.stato!=='disdetta'?'<div class="warn">Giorno senza studio: è online?</div>':'')+'</div>'+
       '<div class="ctl"><select class="eSt">'+Object.keys(STATI).map(k=>'<option value="'+k+'"'+(s.stato===k?' selected':'')+'>'+STATI[k]+'</option>').join('')+'</select>'+
       '<input type="number" class="eImp mini" min="0" step="5" inputmode="decimal" value="'+esc(importo(s)||'')+'" title="Importo €" placeholder="€">'+
       '<label class="inline mute"><input type="checkbox" class="ePag"'+(s.pagato?' checked':'')+'> pagata</label>'+
@@ -747,7 +848,7 @@ $('#aList').addEventListener('change',e=>{
   const c=e.target.classList;
   if(c.contains('eOra')&&e.target.value){s.ora=e.target.value;s.inviato=false;s.confermata=false;s.serie=null;s.step=null;}
   else if(c.contains('eData')&&e.target.value){s.data=e.target.value;s.inviato=false;s.confermata=false;s.serie=null;s.step=null;}
-  else if(c.contains('eSt')) s.stato=e.target.value;
+  else if(c.contains('eSt')){s.stato=e.target.value;if(s.stato==='disdetta'){s.disdAt=new Date().toISOString();s.disdInviato=false;}}
   else if(c.contains('eImp')) s.importo=e.target.value===''?null:+e.target.value;
   else if(c.contains('ePag')) s.pagato=e.target.checked;
   else return;
@@ -797,7 +898,7 @@ function renderPaz(){
     const f=ss.filter(s=>s.stato==='fatta').length,d=ss.filter(s=>s.stato==='disdetta').length,sa=ss.filter(s=>s.stato==='saltata').length;
     const tot=f+d+sa;const pct=tot?Math.round((d+sa)/tot*100)+'%':'—';
     const next=ss.filter(s=>s.data>=t&&s.stato==='prevista').sort(byTime)[0];
-    return '<tr data-id="'+p.id+'"><td style="white-space:nowrap"><strong>'+esc(fullName(p))+'</strong><span class="tag'+(p.modalita==='online'?' on':'')+'">'+(p.forma==='tu'?'tu':'Lei')+' · '+(p.modalita==='online'?'online':'studio')+'</span></td>'+
+    return '<tr data-id="'+p.id+'"><td style="white-space:nowrap"><strong class="pName" style="cursor:pointer;text-decoration:underline dotted">'+esc(fullName(p))+'</strong><span class="tag'+(p.modalita==='online'?' on':'')+'">'+(p.forma==='tu'?'tu':'Lei')+' · '+(p.modalita==='online'?'online':'studio')+'</span></td>'+
       '<td style="white-space:nowrap">'+(p.tel?esc(p.tel):'<span class="warn">manca</span>')+'</td>'+
       '<td class="n">'+(p.tariffa?eur(p.tariffa):'—')+'</td><td class="n">'+f+'</td><td class="n">'+d+'</td><td class="n">'+sa+'</td><td class="n">'+pct+'</td>'+
       '<td style="white-space:nowrap;text-transform:capitalize">'+(next?esc(fmtShort(next.data)+' · '+next.ora):'<span class="mute">—</span>')+'</td>'+
@@ -806,6 +907,10 @@ function renderPaz(){
 }
 $('#pzList').addEventListener('click',e=>{
   const tr=e.target.closest('tr');if(!tr||!tr.dataset.id)return;const p=pz(tr.dataset.id);if(!p)return;
+  if(e.target.classList.contains('pName')){
+    const nx=tr.nextElementSibling;if(nx&&nx.classList.contains('det')){nx.remove();return;}
+    tr.insertAdjacentHTML('afterend','<tr class="det"><td colspan="9">'+storico(p)+'</td></tr>');return;
+  }
   if(e.target.classList.contains('pEdit')){
     $('#fId').value=p.id;$('#fNome').value=p.nome;$('#fCognome').value=p.cognome;$('#fTel').value=p.tel;
     $('#fForma').value=p.forma;$('#fMod').value=p.modalita;$('#fLink').value=p.link||'';$('#fTar').value=p.tariffa==null?'':p.tariffa;
@@ -819,6 +924,21 @@ $('#pzList').addEventListener('click',e=>{
   }
 });
 $('#pzSearch').addEventListener('input',renderPaz);
+function storico(p){
+  const ss=S.sedute.filter(s=>s.pid===p.id).sort(byTime).reverse();const t=today();
+  const f=ss.filter(s=>s.stato==='fatta').length,d=ss.filter(s=>s.stato==='disdetta').length,sa=ss.filter(s=>s.stato==='saltata').length;
+  const debt=ss.filter(s=>dovuta(s)&&!s.pagato).reduce((a,s)=>a+importo(s),0);
+  const first=ss.length?ss[ss.length-1].data:null;
+  const titles=Object.keys(S.gmap).filter(k=>S.gmap[k]===p.id);
+  const lab=s=>s.stato==='fatta'?'Fatta':s.stato==='disdetta'?'Disdetta':s.stato==='saltata'?'Saltata':(s.data>t||(s.data===t&&s.ora>nowHM())?'<span class="mute">in programma</span>':'<span class="warn">da segnare</span>');
+  return '<div style="margin-bottom:8px"><strong>'+f+'</strong> fatte · <strong>'+d+'</strong> disdette · <strong>'+sa+'</strong> saltate'+
+    (first?' · in agenda dal '+esc(parse(first).toLocaleDateString('it-IT',{day:'numeric',month:'short',year:'numeric'})):'')+
+    ' · da incassare: <strong>'+eur(debt)+'</strong></div>'+
+    (titles.length?'<div class="mute" style="margin-bottom:8px">Titoli su Google: '+titles.map(k=>'"'+esc(k)+'"').join(', ')+'</div>':'')+
+    (ss.length?'<div style="max-height:320px;overflow-y:auto"><table><tbody>'+ss.map(s=>'<tr class="st-'+s.stato+'"><td style="white-space:nowrap;text-transform:capitalize">'+esc(fmtShort(s.data))+' '+parse(s.data).getFullYear()+' · '+esc(s.ora)+'</td>'+
+      '<td>'+lab(s)+'</td><td class="n">'+(dovuta(s)?eur(importo(s))+(s.pagato?' ✓':' <span class="warn">non pagata</span>'):'')+'</td></tr>').join('')+'</tbody></table></div>':'<span class="mute">Nessuna seduta.</span>');
+}
+
 
 /* ---------- PAGAMENTI ---------- */
 function renderPag(){
@@ -897,7 +1017,8 @@ function renderImp(){
     return '<tr data-k="'+esc(k)+'"><td>"'+esc(k)+'"</td><td>'+(v==='x'?'<span class="mute">ignorato</span>':esc(fullName(pz(v))))+'</td><td style="text-align:right"><button class="b s unmap">Scollega</button></td></tr>';}).join('')+'</tbody></table></div>':'Nessuno per ora.';
   $('#iFirma').value=st.firma;$('#iInd').value=st.indirizzo;$('#iPref').value=st.prefisso;$('#iDur').value=st.durata;
   $('#iSalt').checked=!!st.saltatePagate;
-  $('#iLei').value=st.tplLei;$('#iTu').value=st.tplTu;$('#iCLei').value=st.confLei;$('#iCTu').value=st.confTu;$('#iMsg').textContent='';
+  $('#iLei').value=st.tplLei;$('#iTu').value=st.tplTu;$('#iCLei').value=st.confLei;$('#iCTu').value=st.confTu;$('#iDLei').value=st.disdLei;$('#iDTu').value=st.disdTu;$('#iMsg').textContent='';
+  renderSedi(st.sedi);
   $('#bInfo').textContent=st.lastBackup?'Ultimo backup: '+new Date(st.lastBackup).toLocaleString('it-IT'):'Nessun backup fatto finora.';
 }
 $('#mapDone').addEventListener('click',e=>{
@@ -908,14 +1029,18 @@ $('#mapDone').addEventListener('click',e=>{
 $('#iSave').onclick=()=>{
   Object.assign(S.settings,{firma:$('#iFirma').value.trim(),indirizzo:$('#iInd').value.trim(),prefisso:($('#iPref').value.replace(/\D/g,'')||'39'),
     durata:Math.max(5,+$('#iDur').value||50),saltatePagate:$('#iSalt').checked,tplLei:$('#iLei').value,tplTu:$('#iTu').value,confLei:$('#iCLei').value,confTu:$('#iCTu').value,
-    gClient:$('#iClient').value.trim()});
+    gClient:$('#iClient').value.trim(),disdLei:$('#iDLei').value,disdTu:$('#iDTu').value,sedi:readSedi()});
   save();$('#iMsg').textContent='Salvato.';
 };
-$('#iReset').onclick=()=>{$('#iLei').value=TPL_LEI;$('#iTu').value=TPL_TU;$('#iCLei').value=CONF_LEI;$('#iCTu').value=CONF_TU;$('#iMsg').textContent='Testi ripristinati: premi Salva per confermarli.';};
-$('#bExp').onclick=()=>{
-  S.settings.lastBackup=new Date().toISOString();save();
-  shareFile('backup-sedute-'+today()+'.json',JSON.stringify(S),'application/json');renderImp();
-};
+function renderSedi(list){
+  $('#sediList').innerHTML=(list||[]).map(x=>'<div class="sede"><div class="days">'+[1,2,3,4,5,6,0].map(d=>'<label><input type="checkbox" value="'+d+'"'+((x.giorni||[]).indexOf(d)>=0?' checked':'')+'>'+GG[d]+'</label>').join('')+'</div>'+
+    '<label style="flex:1 1 240px">presso…<input class="sLuogo" value="'+esc(x.luogo||'')+'" placeholder="lo studio di via ..."></label><button class="b s d sedeDel">Togli</button></div>').join('')||'<p class="mute">Nessuno studio impostato.</p>';
+}
+function readSedi(){return [...document.querySelectorAll('#sediList .sede')].map(el=>({giorni:[...el.querySelectorAll('.days input:checked')].map(i=>+i.value),luogo:el.querySelector('.sLuogo').value.trim()})).filter(x=>x.luogo);}
+$('#sedeAdd').onclick=()=>{const l=readSedi();l.push({giorni:[],luogo:''});renderSedi(l);};
+$('#sediList').addEventListener('click',e=>{if(!e.target.classList.contains('sedeDel'))return;e.target.closest('.sede').remove();});
+$('#iReset').onclick=()=>{$('#iLei').value=TPL_LEI;$('#iTu').value=TPL_TU;$('#iCLei').value=CONF_LEI;$('#iCTu').value=CONF_TU;$('#iDLei').value=DISD_LEI;$('#iDTu').value=DISD_TU;$('#iMsg').textContent='Testi ripristinati: premi Salva per confermarli.';};
+$('#bExp').onclick=()=>{doBackup();renderImp();};
 $('#bImp').addEventListener('change',e=>{
   const f=e.target.files[0];if(!f)return;const r=new FileReader();
   r.onload=()=>{
@@ -945,7 +1070,7 @@ function render(){
   banner();
 }
 load();save();
-$('#pdate').value=addDays(today(),1);
+$('#pdate').value=addDays(today(),2);
 $('#sData').value=addDays(today(),1);
 $('#aFrom').value=today();
 const back=gHandleRedirect();
