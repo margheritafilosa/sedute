@@ -183,7 +183,9 @@ details.card>summary::after{content:' ▾';color:var(--mute)}
           <button class="b s" id="wNext">&rarr;</button>
           <strong id="wLabel"></strong>
         </div>
+        <div class="mute" style="margin-bottom:6px">Tocca una seduta per mandare la conferma.</div>
         <div class="week" id="wGrid"></div>
+        <div id="wConf"></div>
       </div>
       <div id="vLista">
         <div class="row" style="margin-bottom:10px">
@@ -374,7 +376,7 @@ function migrate(){
   delete S.settings.linkCal;
   if(!Array.isArray(S.settings.sedi)) S.settings.sedi=JSON.parse(JSON.stringify(SEDI_DEF));
   S.pazienti=(S.pazienti||[]).map(p=>Object.assign({tariffa:null,link:'',cognome:'',tel:'',forma:'lei',modalita:'studio'},p));
-  S.sedute=(S.sedute||[]).map(s=>Object.assign({stato:'prevista',pagato:false,importo:null,modalita:'',inviato:false,serie:null,step:null,confermata:false,gid:null,spostata:false,link:'',disdAt:null,disdInviato:false},s));
+  S.sedute=(S.sedute||[]).map(s=>Object.assign({stato:'prevista',pagato:false,importo:null,modalita:'',inviato:false,serie:null,step:null,confermata:false,gid:null,spostata:false,link:'',disdAt:null,disdInviato:false,confSingola:null},s));
   S.gmap=S.gmap||{};S.gser=S.gser||{};S.gcache=S.gcache||null;
 }
 function save(){
@@ -472,9 +474,9 @@ function serieInfo(s){
   const l=S.sedute.filter(x=>x.serie===s.serie&&x.data>=s.data&&x.stato!=='disdetta').sort(byTime);
   return l.length>1?{rrule:'RRULE:FREQ=WEEKLY;INTERVAL='+(s.step/7)+';COUNT='+l.length,step:s.step,count:l.length,last:l[l.length-1].data}:null;
 }
-function buildConf(s){
+function buildConf(s,single){
   const p=pz(s.pid);if(!p) return '';
-  const r=serieInfo(s);let app;
+  const r=single?null:serieInfo(s);let app;
   if(r){
     const wd=parse(s.data).toLocaleDateString('it-IT',{weekday:'long'});
     const freq=r.step===7?'ogni '+wd:r.step===14?(wd==='domenica'?'una domenica sì e una no':'un '+wd+' sì e uno no'):'ricorrenti';
@@ -482,13 +484,14 @@ function buildConf(s){
   } else app='il nostro appuntamento di '+fmtDay(s.data)+' alle ore '+s.ora;
   return fill(p.forma==='tu'?S.settings.confTu:S.settings.confLei,{nome:p.nome,cognome:p.cognome,appuntamento:app,luogo:luogoText(s,p),calendario:gcalUrl(s,r),firma:S.settings.firma});
 }
-function sameGroup(s,x){const r=serieInfo(s);return x.id===s.id||(r&&x.serie===s.serie&&x.data>=s.data);}
-function confBox(s,withSkip){
-  const p=pz(s.pid);const num=p?waNum(p.tel):'';const r=serieInfo(s);
-  return '<div class="confbox" data-id="'+s.id+'">'+
+function sameGroup(s,x,single){const r=single?null:serieInfo(s);return x.id===s.id||(r&&x.serie===s.serie&&x.data>=s.data);}
+function confBox(s,withSkip,single){
+  const p=pz(s.pid);const num=p?waNum(p.tel):'';const r=single?null:serieInfo(s);
+  return '<div class="confbox" data-id="'+s.id+'" data-single="'+(single?'1':'')+'">'+
     '<div style="margin-bottom:6px"><strong>'+esc(fullName(p))+'</strong> <span class="mute">'+esc(fmtShort(s.data)+' · '+s.ora)+(r?' · serie':'')+(s.spostata?' · spostata':'')+'</span>'+
     (r&&r.count?'<div class="mute">'+r.count+' sedute: il link le salva tutte nel suo calendario</div>':r?'<div class="mute">Serie ricorrente: il link la salva intera nel suo calendario</div>':'')+'</div>'+
-    '<textarea class="cm" rows="5">'+esc(buildConf(s))+'</textarea>'+
+    (single&&s.serie?'<div class="mute">Solo questa seduta</div>':'')+
+    '<textarea class="cm" rows="5">'+esc(buildConf(s,single))+'</textarea>'+
     '<div class="row" style="margin-top:8px;align-items:center"><a class="wa'+(num?'':' off')+'" target="_blank" rel="noopener" href="#">'+(s.confermata?'Inviata · riapri':'Invia conferma su WhatsApp')+'</a>'+
     '<button class="b s ics2">'+(mobile()?'Condividi invito calendario':'Scarica invito (.ics)')+'</button>'+
     (withSkip?'<button class="b s skip">Già confermata</button>':'')+
@@ -507,9 +510,9 @@ function editPaz(pid){showTab('paz');const tr=document.querySelector('#pzList tr
 document.addEventListener('click',e=>{
   const ge=e.target.closest('.goEdit');if(ge){editPaz(ge.dataset.pid);return;}
   const box=e.target.closest('.confbox');if(!box)return;
-  const s=S.sedute.find(x=>x.id===box.dataset.id);if(!s)return;const p=pz(s.pid);
-  if(e.target.closest('.ics2')){shareFile('appuntamento-'+s.data+'.ics',icsText(s,serieInfo(s)),'text/calendar');return;}
-  const mark=()=>{const tm=addDays(today(),1);S.sedute.forEach(x=>{if(sameGroup(s,x)){x.confermata=true;x.spostata=false;if(x.data<=tm)x.inviato=true;}});save();};
+  const s=S.sedute.find(x=>x.id===box.dataset.id);if(!s)return;const p=pz(s.pid);const single=box.dataset.single==='1';
+  if(e.target.closest('.ics2')){shareFile('appuntamento-'+s.data+'.ics',icsText(s,single?null:serieInfo(s)),'text/calendar');return;}
+  const mark=()=>{const tm=addDays(today(),1);s.confSingola=today();S.sedute.forEach(x=>{if(sameGroup(s,x,single)){x.confermata=true;x.spostata=false;if(x.data<=tm)x.inviato=true;}});save();};
   if(e.target.closest('.skip')){mark();render();return;}
   const a=e.target.closest('a.wa');if(!a)return;
   if(!p||!waNum(p.tel)){e.preventDefault();return;}
@@ -582,7 +585,7 @@ async function gSync(auto){
 }
 async function gFetchSeries(){
   const t=today();const need=new Set();
-  S.sedute.forEach(s=>{if(s.gid&&s.serie&&!S.gser[s.serie]&&s.data>=t&&!s.confermata)need.add(s.serie);});
+  S.sedute.forEach(s=>{if(s.gid&&s.serie&&!S.gser[s.serie]&&s.data>=t)need.add(s.serie);});
   for(const sid of need){
     try{const ev=await gGet('calendars/'+encodeURIComponent(S.settings.gCal)+'/events/'+encodeURIComponent(sid.slice(2)));
       const rr=(ev.recurrence||[]).find(x=>x.indexOf('RRULE:')===0);if(rr)S.gser[sid]=rr;}catch(e){if(e.message==='AUTH')throw e;}
@@ -717,20 +720,39 @@ $('#chiudiList').addEventListener('click',e=>{
   const b=e.target.closest('.setSt');if(!b)return;
   const s=S.sedute.find(x=>x.id===b.closest('.srow').dataset.id);if(!s)return;
   s.stato=b.dataset.st;if(s.stato==='disdetta')s.disdAt=new Date().toISOString();save();
+  if(s.stato==='disdetta'){renderProm();return;}
   if(dovuta(s)&&!s.pagato){
     const imp=importo(s);
     b.closest('.ctl').innerHTML='<span class="mute">Pagata?</span>'+(imp?'':'<input type="number" class="mini payImp" placeholder="€" inputmode="decimal">')+
       '<button class="b s p payY">Sì'+(imp?' · '+esc(eur(imp)):'')+'</button><button class="b s payN">Non ancora</button>';
     return;
   }
-  renderProm();
+  afterClose(b.closest('.srow'),s);
 });
 $('#chiudiList').addEventListener('click',e=>{
   const y=e.target.closest('.payY'),n=e.target.closest('.payN');if(!y&&!n)return;
   const row=e.target.closest('.srow');const s=S.sedute.find(x=>x.id===row.dataset.id);
   const ii=row.querySelector('.payImp');if(s&&ii&&ii.value!=='')s.importo=+ii.value;
   if(s&&y)s.pagato=true;
-  save();renderProm();
+  save();afterClose(row,s);
+});
+function nextOf(s){const t=today(),h=nowHM();
+  return S.sedute.filter(x=>x.pid===s.pid&&x.id!==s.id&&x.stato==='prevista'&&(x.data>t||(x.data===t&&x.ora>h))).sort(byTime)[0]||null;}
+function afterClose(row,s){
+  const n=nextOf(s);
+  if(!n||n.data>addDays(today(),21)||n.confSingola){renderProm();return;}
+  const p=pz(s.pid);const num=p?waNum(p.tel):'';
+  row.querySelector('.ctl').innerHTML='<span class="mute">Confermi la prossima?</span>'+
+    (num?'<a class="wa nextConf" data-nid="'+n.id+'" target="_blank" rel="noopener" href="#">'+esc(fmtShort(n.data)+' · '+n.ora)+'</a>':'<button class="b s goEdit" data-pid="'+esc(s.pid)+'" style="color:var(--warn)">Manca il cellulare</button>')+
+    '<button class="b s nextNo">No</button>';
+}
+$('#chiudiList').addEventListener('click',e=>{
+  if(e.target.closest('.nextNo')){renderProm();return;}
+  const a=e.target.closest('.nextConf');if(!a)return;
+  const n=S.sedute.find(x=>x.id===a.dataset.nid);if(!n){e.preventDefault();return;}
+  const p=pz(n.pid);a.href=waUrl(waNum(p.tel),buildConf(n,true));
+  n.confermata=true;n.confSingola=today();n.spostata=false;if(n.data<=addDays(today(),1))n.inviato=true;save();
+  setTimeout(()=>{a.classList.add('sent');a.textContent='Inviata';setTimeout(renderProm,1200);},250);
 });
 
 function renderProm(){
@@ -814,11 +836,19 @@ function renderWeek(){
     const d=addDays(weekStart,i);const list=S.sedute.filter(s=>s.data===d).sort(byTime);
     html+='<div class="wcol'+(d===t?' today':'')+'"><div class="whead">'+esc(fmtShort(d))+'</div>'+
       list.map(s=>{const p=pz(s.pid);const mod=modalita(s,p);
-        return '<div class="wb st-'+s.stato+'"><b>'+esc(s.ora)+'</b>'+esc(fullName(p))+(mod==='online'?' <span class="mute">· online</span>':'')+
-        (s.stato!=='prevista'?'<div class="mute">'+esc(STATI[s.stato])+'</div>':'')+'</div>';}).join('')+'</div>';
+        return '<div class="wb st-'+s.stato+'" data-id="'+s.id+'" style="cursor:pointer"><b>'+esc(s.ora)+'</b>'+esc(fullName(p))+(mod==='online'?' <span class="mute">· online</span>':'')+
+        (s.stato!=='prevista'?'<div class="mute">'+esc(STATI[s.stato])+'</div>':s.confSingola?'<div class="mute">✓ confermata</div>':'')+'</div>';}).join('')+'</div>';
   }
-  $('#wGrid').innerHTML=html;
+  $('#wGrid').innerHTML=html;$('#wConf').innerHTML='';
 }
+$('#wGrid').addEventListener('click',e=>{
+  const b=e.target.closest('.wb');if(!b)return;const s=S.sedute.find(x=>x.id===b.dataset.id);if(!s)return;
+  $('#wConf').innerHTML=confBox(s,false,true)+(serieInfo(s)?'<button class="b s wSerie" data-id="'+s.id+'" style="margin-top:6px">Manda invece tutta la serie</button>':'');
+  $('#wConf').scrollIntoView({behavior:'smooth',block:'nearest'});
+});
+$('#wConf').addEventListener('click',e=>{
+  const b=e.target.closest('.wSerie');if(!b)return;const s=S.sedute.find(x=>x.id===b.dataset.id);if(s)$('#wConf').innerHTML=confBox(s,false,false);
+});
 $('#wPrev').onclick=()=>{weekStart=addDays(weekStart,-7);renderWeek();};
 $('#wNext').onclick=()=>{weekStart=addDays(weekStart,7);renderWeek();};
 $('#wNow').onclick=()=>{weekStart=mondayOf(today());renderWeek();};
@@ -833,12 +863,12 @@ function renderList(){
     const p=pz(s.pid);const mod=modalita(s,p);
     html+='<div class="srow st-'+s.stato+'" data-id="'+s.id+'"><div><strong>'+esc(s.ora)+'  '+esc(fullName(p))+'</strong>'+
       (s.gid?'<span class="tag g">Google</span>':'')+'<span class="tag'+(mod==='online'?' on':'')+'">'+mod+'</span>'+
-      '<div class="mute">'+(s.confermata?'confermata':'da confermare')+(s.inviato?' · promemoria inviato':'')+'</div>'+(noStudio(s)&&s.stato!=='disdetta'?'<div class="warn">Giorno senza studio: è online?</div>':'')+'</div>'+
+      '<div class="mute">'+(s.confSingola?'conferma inviata il '+esc(parse(s.confSingola).toLocaleDateString('it-IT',{day:'numeric',month:'short'})):s.confermata?'confermata':'da confermare')+(s.inviato?' · promemoria inviato':'')+'</div>'+(noStudio(s)&&s.stato!=='disdetta'?'<div class="warn">Giorno senza studio: è online?</div>':'')+'</div>'+
       '<div class="ctl"><select class="eSt">'+Object.keys(STATI).map(k=>'<option value="'+k+'"'+(s.stato===k?' selected':'')+'>'+STATI[k]+'</option>').join('')+'</select>'+
       '<input type="number" class="eImp mini" min="0" step="5" inputmode="decimal" value="'+esc(importo(s)||'')+'" title="Importo €" placeholder="€">'+
       '<label class="inline mute"><input type="checkbox" class="ePag"'+(s.pagato?' checked':'')+'> pagata</label>'+
       (s.gid?'':'<input type="date" class="eData" value="'+esc(s.data)+'"><input type="time" class="eOra" value="'+esc(s.ora)+'" step="300">')+
-      '<button class="b s eConf">Conferma</button>'+
+      '<button class="b s eConf">Conferma</button>'+(serieInfo(s)?'<button class="b s eConfS">Conferma serie</button>':'')+
       (s.gid?'':'<button class="b s d eDel">Elimina</button>'+(s.serie?'<button class="b s d eDelS">Elimina da qui in poi</button>':''))+'</div></div>';
   });
   $('#aList').innerHTML=html;
@@ -856,9 +886,9 @@ $('#aList').addEventListener('change',e=>{
 });
 $('#aList').addEventListener('click',e=>{
   const row=e.target.closest('.srow');if(!row)return;const s=S.sedute.find(x=>x.id===row.dataset.id);if(!s)return;
-  if(e.target.classList.contains('eConf')){
+  if(e.target.classList.contains('eConf')||e.target.classList.contains('eConfS')){
     const nx=row.nextElementSibling;if(nx&&nx.classList.contains('confwrap')){nx.remove();return;}
-    row.insertAdjacentHTML('afterend','<div class="confwrap">'+confBox(s,false)+'</div>');return;
+    row.insertAdjacentHTML('afterend','<div class="confwrap">'+confBox(s,false,e.target.classList.contains('eConf'))+'</div>');return;
   }
   if(e.target.classList.contains('eDel')){
     if(!confirm('Eliminare la seduta di '+fmtDay(s.data)+' alle '+s.ora+'? Se il paziente ha disdetto, meglio segnarla come "Disdetta".'))return;
